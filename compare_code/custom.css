@@ -1,0 +1,12 @@
+.reveal[data-transition-speed="instant"] .slides section {
+	-webkit-transition-duration: 0ms;
+	   -moz-transition-duration: 0ms;
+	    -ms-transition-duration: 0ms;
+	        transition-duration: 0ms;
+}
+.reveal .slides section[data-transition-speed="instant"] {
+	-webkit-transition-duration: 0ms;
+	   -moz-transition-duration: 0ms;
+	    -ms-transition-duration: 0ms;
+	        transition-duration: 0ms;
+}

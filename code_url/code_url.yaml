@@ -1,0 +1,6 @@
+Type: IPython Notebook Extension
+Name: Code URL
+Description: Custom URL that looks like code
+Link: readme.md
+Main: main.js
+Compatibility: 4.x

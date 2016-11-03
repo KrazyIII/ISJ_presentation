@@ -1,0 +1,38 @@
+a.code:link {
+	background-color: rgb(249,249,249) !important;
+	color: black !important;
+	font-weight: bold;
+	text-decoration: none;
+	border-top: 2px solid silver !important;
+	border-bottom: 2px solid silver !important;
+	border-radius: 5px;
+	padding: 2px;
+}
+
+a.code:hover {
+	background-color: rgb(249,249,249) !important;
+	color: black !important;
+	font-weight: bold;
+	text-decoration: none;
+	border-top: 2px solid gray !important;
+	border-bottom: 2px solid gray !important;
+	border-radius: 5px;
+	padding: 2px;
+}
+
+a.code:active {
+	background-color: rgb(249,249,249) !important;
+	color: black !important;
+	font-weight: bold;
+	text-decoration: none;
+	border-top: 2px solid gray !important;
+	border-bottom: 2px solid gray !important;
+	border-radius: 5px;
+	padding: 2px;
+}
+
+code {
+	background-color: rgb(249,249,249) !important;
+	font-size: 0.85em !important;
+	letter-spacing: 0.30em !important;
+}
