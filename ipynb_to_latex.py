@@ -1,5 +1,6 @@
 import nbformat
 import re
+import sys
 from traitlets.config import Config
 from nbconvert import LatexExporter
 
@@ -16,7 +17,11 @@ def get_outputs(outputs):
 	return ret_str
 #end def get_outputs
 
-notebook_file = open("isj_python4.ipynb","rt",encoding="utf-8")
+if len(sys.argv) != 2:
+	print("Usage: ipynb_to_pdf.py file\n")
+	exit()
+
+notebook_file = open(sys.argv[1],"rt",encoding="utf-8")
 
 notebook = nbformat.reads(notebook_file.read(), as_version=4)
 
@@ -87,7 +92,7 @@ latex_exporter.template_file = 'article'
 
 (body, resources) = latex_exporter.from_notebook_node(notebook)
 
-outFile = open('isj_python4.test.tex', 'w', encoding="utf-8")
+outFile = open(sys.argv[1]+'.tex', 'w', encoding="utf-8")
 
 packages = ("\\usepackage{listings}\n"
 "\\definecolor{myDarkBlue}{rgb}{0,0,0.5}\n\n"
