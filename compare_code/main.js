@@ -89,9 +89,9 @@ define([
 		$('#maintoolbar').bind('addClassEvent', function(type, arguments){
 			if (arguments === 'reveal_tagging'){
 
-				console.log('---------');
-				console.log(arguments);
-				console.log('---------');
+				//console.log('---------');
+				//console.log(arguments);
+				//console.log('---------');
 			
 				var slide_counter = -1, subslide_counter = -1;
 			
