@@ -5,30 +5,61 @@ import lxml.html
 import json
 from lxml import etree
 
-"""Arguments"""
-if len(sys.argv) != 2:
-	print("Usage: web_page_to_ipython.py url\n")
-	exit()
-"""Global variables"""
-url = sys.argv[1]
+page_text = ""
 outName = ""
+"""Arguments"""
+if len(sys.argv) == 3 and sys.argv[1] == "--url":
+	url = sys.argv[2]
 
-with open("web_page_to_ipython.py.config", "rt", encoding="utf-8") as config_file:    
-    config = json.loads(config_file.read())
+	domain = re.sub('(.*://)([^/]*\\.[^/]*)/.*','\\2',url)
+	#print(domain)
 
-domain = re.sub('(.*://)([^/]*\\.[^/]*)/.*','\\2',url)
-#print(domain)
+	page_text = urllib.request.urlopen(url).read()
+	outName = url
+elif (len(sys.argv) == 3 or len(sys.argv) == 5) and sys.argv[1] == "--local":
+	file_name = sys.argv[2]
+	
+	domain = "local_file"
+	
+	encoding = "utf-8"
+	if len(sys.argv) == 5 and sys.argv[3] == "--encoding":
+		encoding = sys.argv[4]
+	
+	file = open(file_name, "rt", encoding=encoding)
+	page_text = file.read()
+	
+	outName = file_name
+elif len(sys.argv) == 2 and sys.argv[1] == "--stdin":
+	outName = "stdin"
+	
+	domain = "stdin"
+	
+	page_text = sys.stdin.read()
+else:
+	print("Usage:")
+	print("URL: python web_page_to_ipython --url www.url.com/some_page")
+	print()
+	print("Local file: python web_page_to_ipython --local file [--encoding enc]")
+	print("            Config for local file is local_file in web_page_to_ipython.py.config")
+	print("            Default encoding is utf-8")
+	print("STDIN: python web_page_to_ipython --stdin")
+	exit()
 
 config_text = ""
-if config.get(domain, False):
-	for index, part in enumerate(config[domain]):
-		if index != 0:
-			config_text+= ' | '
-		config_text+= part
-else:
-	print("Domain not in config\n")
-	exit()
+with open("web_page_to_ipython.py.config", "rt", encoding="utf-8") as config_file:    
+	config = json.loads(config_file.read())
 
+	if config.get(domain, False):
+		for index, part in enumerate(config[domain]):
+			if index != 0:
+				config_text+= ' | '
+			config_text+= part
+	else:
+		print("Domain "+ domain +" is not in config\n")
+		exit()
+
+"""Converting web page"""
+html = lxml.html.fromstring(page_text)
 #print(config_text)
 
 notebook = {}
@@ -60,24 +91,10 @@ notebook["metadata"]["language_info"]["version"] = "3.5.2"
 
 notebook["cells"] = []
 
-"""Getting web page"""
-page_text = urllib.request.urlopen(url)
-html = lxml.html.fromstring(page_text.read())
-
-"""Header and filename"""
-
-"""Cell init"""
-cell = {}
-cell["cell_type"] = "markdown"
-cell["metadata"] = {}
-cell["metadata"]["slideshow"] = {}
-cell["metadata"]["slideshow"]["slide_type"] = "slide"
-cell["source"] = []
+"""Filename"""
 """Getting the header"""
 for title_text in html.xpath("//title/text()"):
-	cell["source"].append("# "+title_text)
-	outName += title_text
-notebook["cells"].append(cell)
+	outName = title_text
 
 #print(html.xpath("//div[@class='post-text']/p/text()"))
 
@@ -102,12 +119,14 @@ for tag in html.xpath(config_text):
 	type = "markdown"
 	source = ""
 	listOrders=[]
+	table_head = False
 	
 	"""Iterative working of tags"""
-	def work_tag(elem, order=0, code=False):
+	def work_tag(elem, order=0, printing="markdown"):
 		global type
 		global source
 		global listOrders
+		global table_head
 		"""Print tail after the rest"""
 		tail = True
 		"""Pop list, used for lists in lists"""
@@ -119,17 +138,21 @@ for tag in html.xpath(config_text):
 		if elem.text == None:
 			text = ""
 		else:
-			if elem.tag == "code" or code:
+			if elem.tag == "code" or printing == "code":
 				text = elem.text
-			else:
+			elif printing == "markdown":
 				text = elem.text.replace("_",r"\_").replace("*",r"\*")
+				text = re.sub("[ \t]+"," ",text)
+			elif printing == "table":
+				text = elem.text.replace("_",r"\_").replace("*",r"\*")
+				text = text.replace("\n"," ")
 		
-		if elem.tag == "p" or elem.tag == "small" or elem.tag == "mark" or elem.tag == "del" or elem.tag == "ins" or elem.tag == "sub" or elem.tag == "sup":
+		if elem.tag == "p" or elem.tag == "q" or elem.tag == "small" or elem.tag == "mark" or elem.tag == "del" or elem.tag == "ins" or elem.tag == "sub" or elem.tag == "sup":
 			source+= text
 		elif elem.tag == "pre":
 			"""Code"""
 			type = "code"
-			code = True
+			printing = "code"
 			source+= text
 		elif elem.tag == "span":
 			source+= text
@@ -139,8 +162,8 @@ for tag in html.xpath(config_text):
 			source+= "["+text
 			endBody = "]("+elem.get("href")+")"
 		elif elem.tag == "code":
-			code = True
-			if cell["cell_type"] == "markdown":
+			printing = "code"
+			if type == "markdown":
 				source+= " `"+text
 				endBody = "` "
 			else:
@@ -164,11 +187,15 @@ for tag in html.xpath(config_text):
 		elif elem.tag == "h6":
 			source+= "###### "+text
 		elif elem.tag == "ul":
+			source+= "\n"
 			listOrders.append("unordered")
 			remList = True
+			printing = "table"
 		elif elem.tag == "ol":
+			source = "\n"
 			listOrders.append("ordered")
 			remList = True
+			printing = "table"
 		elif elem.tag == "li":
 			for num in listOrders[1:]:
 				source+= ".."
@@ -178,36 +205,74 @@ for tag in html.xpath(config_text):
 				source+= str(order)+". "
 			source+= text
 			endBody = '\n'
+			printing = "table"
 			tail = False
 		elif elem.tag == "dd":
 			source+= "  "+text
 			endBody = '\n'
+			printing = "table"
 			tail = False
 		elif elem.tag == "dt":
 			source+= text
 			endBody = '\n'
+			printing = "table"
 			tail = False
-		elif elem.tag == "dt":
-			None
+		elif elem.tag == "dl":
+			source+= "\n"
+			printing = "table"
+		elif elem.tag == "table":
+			source+= "\n"
+			table_head = True
+			printing = "table"
+		elif elem.tag == "tr":
+			endBody = '|\n'
+			tail = False
+			if table_head:
+				table_head = False
+				for i in list(elem):
+					endBody+= "| --- "
+				endBody+= "|\n"
+		elif elem.tag == "td":
+			source+= "| " + text
+			endBody = ' '
+			tail = False
+		elif elem.tag == "th":
+			source+= "| **" + text
+			endBody = '** '
+			tail = False
+		elif elem.tag == "caption":
+			source+= text
+			endBody = '\n'
+			tail = False
+		elif elem.tag == "title":
+			source+= "# "+text
+			tail = False
 		else:
 			tail = False
 		
 		"""Work childs"""
 		for index, child in enumerate(list(elem), start=1):
-			work_tag(child, index, code)
+			work_tag(child, index, printing)
 		
 		"""Write end of body"""
 		source+= endBody
 		"""Write tail"""
 		if elem.tail != None and tail:
-			source+= elem.tail
+			if printing == "code":
+				source+= elem.tail
+			elif printing == "markdown":
+				source+= re.sub("[ \t]+"," ",elem.tail.replace("_",r"\_").replace("*",r"\*"))
+			elif printing == "table":
+				source+= re.sub("[ \t]+"," ",elem.tail.replace("_",r"\_").replace("*",r"\*"))
 		if remList:
 			listOrders.pop()
 			
 			
 	"""1st call"""
 	work_tag(tag)
-	notebook["cells"].append(newCell(type, source))
+	
+	if source:
+		notebook["cells"].append(newCell(type, source))
 
 """Output"""
 #print(json.dumps(notebook, indent=4))
