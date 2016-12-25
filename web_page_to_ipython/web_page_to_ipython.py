@@ -3,6 +3,7 @@ import re
 import sys
 import lxml.html
 import json
+import configparser
 from lxml import etree
 
 page_text = ""
@@ -46,21 +47,18 @@ else:
 	exit()
 
 config_text = ""
-with open("web_page_to_ipython.py.config", "rt", encoding="utf-8") as config_file:    
-	config = json.loads(config_file.read())
+config = configparser.ConfigParser()
+config.read('web_page_to_ipython.py.config')
+if domain in config:
+	config_text = config[domain]['find']
+else:
+	print("Domain "+ domain +" is not in config\n")
+	exit()
 
-	if config.get(domain, False):
-		for index, part in enumerate(config[domain]):
-			if index != 0:
-				config_text+= ' | '
-			config_text+= part
-	else:
-		print("Domain "+ domain +" is not in config\n")
-		exit()
 
 """Converting web page"""
 html = lxml.html.fromstring(page_text)
-#print(config_text)
+print(config_text)
 
 notebook = {}
 
@@ -159,46 +157,79 @@ for tag in html.xpath(config_text):
 		elif elem.tag == "div":
 			source+= text
 		elif elem.tag == "a":
-			source+= "["+text
-			endBody = "]("+elem.get("href")+")"
+			if printing == "code":
+				source+= text
+			else:
+				source+= "["+text
+				endBody = "]("+ elem.get("href").replace("(","").replace(")","") +")"
 		elif elem.tag == "code":
-			printing = "code"
-			if type == "markdown":
+			if printing == "code":
+				source+= text
+			else:
 				source+= " `"+text
 				endBody = "` "
-			else:
+			printing = "code"
+		elif elem.tag == "strong" or elem.tag == "b" or elem.tag == "big":
+			if printing == "code":
 				source+= text
-		elif elem.tag == "strong" or elem.tag == "b":
-			source+= "**"+text
-			endBody = "**"
+			else:
+				source+= "**"+text
+				endBody = "**"
 		elif elem.tag == "em" or elem.tag == "i":
-			source+= "*"+text
-			endBody = "*"
+			if printing == "code":
+				source+= text
+			else:
+				source+= "*"+text
+				endBody = "*"
 		elif elem.tag == "h1":
-			source+= "# "+text
+			if printing == "code":
+				source+= text
+			else:
+				source+= "# "+text
+				endBody = "\n"
 		elif elem.tag == "h2":
-			source+= "## "+text
+			if printing == "code":
+				source+= text
+			else:
+				source+= "## "+text
+				endBody = "\n"
 		elif elem.tag == "h3":
-			source+= "### "+text
+			if printing == "code":
+				source+= text
+			else:
+				source+= "### "+text
+				endBody = "\n"
 		elif elem.tag == "h4":
-			source+= "#### "+text
+			if printing == "code":
+				source+= text
+			else:
+				source+= "#### "+text
+				endBody = "\n"
 		elif elem.tag == "h5":
-			source+= "##### "+text
+			if printing == "code":
+				source+= text
+			else:
+				source+= "##### "+text
+				endBody = "\n"
 		elif elem.tag == "h6":
-			source+= "###### "+text
+			if printing == "code":
+				source+= text
+			else:
+				source+= "###### "+text
+				endBody = "\n"
 		elif elem.tag == "ul":
 			source+= "\n"
 			listOrders.append("unordered")
 			remList = True
 			printing = "table"
 		elif elem.tag == "ol":
-			source = "\n"
+			source+= "\n"
 			listOrders.append("ordered")
 			remList = True
 			printing = "table"
 		elif elem.tag == "li":
 			for num in listOrders[1:]:
-				source+= ".."
+				source+= "  "
 			if listOrders[-1] == "unordered":
 				source+= "* "
 			if listOrders[-1] == "ordered":
@@ -221,7 +252,7 @@ for tag in html.xpath(config_text):
 			source+= "\n"
 			printing = "table"
 		elif elem.tag == "table":
-			source+= "\n"
+			source+= "\n\n"
 			table_head = True
 			printing = "table"
 		elif elem.tag == "tr":
@@ -230,15 +261,22 @@ for tag in html.xpath(config_text):
 			if table_head:
 				table_head = False
 				for i in list(elem):
-					endBody+= "| --- "
+					for j in range(0, int(i.get("colspan", 1))):
+						endBody+= "| --- "
 				endBody+= "|\n"
 		elif elem.tag == "td":
 			source+= "| " + text
 			endBody = ' '
+			for i in range(1 , int(elem.get("colspan", 1))):
+				endBody+= "|"
+			endBody+= ' '
 			tail = False
 		elif elem.tag == "th":
 			source+= "| **" + text
 			endBody = '** '
+			for i in range(1 , int(elem.get("colspan", 1))):
+				endBody+= "|"
+			endBody+= ' '
 			tail = False
 		elif elem.tag == "caption":
 			source+= text
