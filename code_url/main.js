@@ -30,9 +30,11 @@ define([
 		txt = txt.replace(/{c{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
 				/*{ci{example}reference }*/
 		txt = txt.replace(/{ci{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\">$1</a>");
+		txt = txt.replace(/<a href="(.*?)" target="_blank">\s*<code>(.*?)<\/code>\s*<\/a>/g, "<a class=\"code\" href=\"$1\" target=\"_blank\"><code>$2</code></a>");
+		txt = txt.replace(/<a href="(.*?)">\s*<code>(.*?)<\/code>\s*<\/a>/g, "<a class=\"code\" href=\"$1\"><code>$2</code></a>");
 		element[0].innerHTML = txt;
 		
-		//console.log(txt);
+		console.log(txt);
         //console.log(element);
     };
 	
