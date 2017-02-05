@@ -6,39 +6,81 @@ import json
 import configparser
 from lxml import etree
 
+
+def relative_to_absolute_ref(href):
+	global sourceURL
+	
+	if re.match("(http)|(https)://", href):
+		return href
+	elif href.startswith("#"):
+		return re.sub("(.*)#.*","\\1",sourceURL) + href
+	elif href.startswith("/"):
+		return re.sub("(.*://.*?)/.*","\\1",sourceURL) + href
+	else:
+		if href.startswith("./"):
+			href = href[2:]
+		return re.sub("(.*/).*","\\1",sourceURL) + href
+
+def is_url(url):
+	
+	if re.match("(http)|(https)://", url):
+		return True
+	return False
+
+sourceURL = ""
 page_text = ""
 outName = ""
 """Arguments"""
-if len(sys.argv) == 3 and sys.argv[1] == "--url":
-	url = sys.argv[2]
+arg_num = len(sys.argv)
+try:
+	if (arg_num == 3 and sys.argv[1] == "--url")or(arg_num == 2 and is_url(sys.argv[1])):
+		url = sys.argv[arg_num - 1]
+	
+		domain = re.sub('(.*://)([^/]*\\.[^/]*)/.*','\\2',url)
+		#print(domain)
 
-	domain = re.sub('(.*://)([^/]*\\.[^/]*)/.*','\\2',url)
-	#print(domain)
-
-	page_text = urllib.request.urlopen(url).read()
-	outName = url
-elif (len(sys.argv) == 3 or len(sys.argv) == 5) and sys.argv[1] == "--local":
-	file_name = sys.argv[2]
+		page_text = urllib.request.urlopen(url).read()
+		sourceURL = url
+		outName = url
+	elif (arg_num == 3 or arg_num == 5) and sys.argv[1] == "--local":
+		file_name = sys.argv[2]
 	
-	domain = "local_file"
+		domain = "local_file"
 	
-	encoding = "utf-8"
-	if len(sys.argv) == 5 and sys.argv[3] == "--encoding":
-		encoding = sys.argv[4]
+		encoding = "utf-8"
+		if len(sys.argv) == 5 and sys.argv[3] == "--encoding":
+			encoding = sys.argv[4]
 	
-	file = open(file_name, "rt", encoding=encoding)
-	page_text = file.read()
+		file = open(file_name, "rt", encoding=encoding)
+		page_text = file.read()
 	
-	outName = file_name
-elif len(sys.argv) == 2 and sys.argv[1] == "--stdin":
-	outName = "stdin"
+		#sourceURL = "https://docs.python.org/3/library/json.html#module-json"
+		sourceURL = ""
+		outName = file_name
+	elif arg_num == 2 and sys.argv[1] == "--stdin":
+		sourceURL = ""
+		outName = "stdin"
 	
-	domain = "stdin"
+		domain = "stdin"
 	
-	page_text = sys.stdin.read()
-else:
+		page_text = sys.stdin.read()
+	else:
+		file_name = " ".join(sys.argv[1:])
+	
+		domain = "local_file"
+	
+		encoding = "utf-8"
+		if len(sys.argv) == 5 and sys.argv[3] == "--encoding":
+			encoding = sys.argv[4]
+	
+		file = open(file_name, "rt", encoding=encoding)
+		page_text = file.read()
+	
+		sourceURL = ""
+		outName = file_name
+except:
 	print("Usage:")
-	print("URL: python web_page_to_ipython --url www.url.com/some_page")
+	print("URL: python web_page_to_ipython --url http://www.url.com/some_page")
 	print()
 	print("Local file: python web_page_to_ipython --local file [--encoding enc]")
 	print("            Config for local file is local_file in web_page_to_ipython.py.config")
@@ -58,7 +100,7 @@ else:
 
 """Converting web page"""
 html = lxml.html.fromstring(page_text)
-print(config_text)
+#print(config_text)
 
 notebook = {}
 
@@ -91,7 +133,7 @@ notebook["cells"] = []
 
 """Filename"""
 """Getting the header"""
-for title_text in html.xpath("//title/text()"):
+for title_text in html.xpath("/html/head/title/text()"):
 	outName = title_text
 
 #print(html.xpath("//div[@class='post-text']/p/text()"))
@@ -157,11 +199,13 @@ for tag in html.xpath(config_text):
 		elif elem.tag == "div":
 			source+= text
 		elif elem.tag == "a":
+			href = relative_to_absolute_ref(elem.get("href"))
+			
 			if printing == "code":
 				source+= text
 			else:
 				source+= "["+text
-				endBody = "]("+ elem.get("href").replace("(","").replace(")","") +")"
+				endBody = "]("+ href.replace("(","").replace(")","") +")"
 		elif elem.tag == "code":
 			if printing == "code":
 				source+= text

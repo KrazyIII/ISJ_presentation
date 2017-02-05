@@ -33,7 +33,7 @@ define([
         document.getElementsByTagName("head")[0].appendChild(link);
 		//----------------------------------------------------------------------------------------------------------
 		// Register a callback to create a UI element for a cell toolbar.
-        IPython.CellToolbar.register_callback('compare_code', compare_code_callback, 'code');
+        IPython.CellToolbar.register_callback('compare_code', compare_code_callback);
         // Register a preset of UI elements forming a cell toolbar.
         IPython.CellToolbar.register_preset('Compare Code', ['compare_code']);
 		

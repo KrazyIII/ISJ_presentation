@@ -21,17 +21,18 @@ define([
 		
 		//console.log(element[0].innerHTML);
 		
-		var str = element[0].innerHTML;
+		var txt = element[0].innerHTML;
+				/*[`example`](reference)*/
+		txt = txt.replace(/<a (.*?)>(.*?<code>.*?<\/code>.*?)<\/a>/g, "<a class=\"code\" $1>$2</a>");
 				/*{c{example}http://www.example.com/reference }*/
-		var txt = str.replace(/{c{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
+		txt = txt.replace(/{c{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
 				/*{ci{example}http://www.example.com/reference }*/
 		txt = txt.replace(/{ci{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\">$1</a>");
 				/*{c{example}reference }*/
 		txt = txt.replace(/{c{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
 				/*{ci{example}reference }*/
 		txt = txt.replace(/{ci{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\">$1</a>");
-		txt = txt.replace(/<a href="(.*?)" target="_blank">\s*<code>(.*?)<\/code>\s*<\/a>/g, "<a class=\"code\" href=\"$1\" target=\"_blank\"><code>$2</code></a>");
-		txt = txt.replace(/<a href="(.*?)">\s*<code>(.*?)<\/code>\s*<\/a>/g, "<a class=\"code\" href=\"$1\"><code>$2</code></a>");
+
 		element[0].innerHTML = txt;
 		
 		console.log(txt);

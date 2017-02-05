@@ -1,0 +1,6 @@
+Type: IPython Notebook Extension
+Name: Convert web pages to ipython
+Description: Convert web pages to ipython
+Link: readme.md
+Main: main.js
+Compatibility: 4.x
