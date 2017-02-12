@@ -4,3 +4,17 @@ Description: Convert web pages to ipython
 Link: readme.md
 Main: main.js
 Compatibility: 4.x
+Parameters:
+- name: xpath_for_domain
+  description: xpath stirngs for domains
+  input_type: list
+  list_element:
+    input_type: text
+  default:
+  - stackoverflow.com = //div[@id='question-header'] | //div[@class='post-text']/* | //span[@class='comment-copy']
+  - docs.python.org = //div[@class='section']/*[not(@class='section') and not(name()='dl')] | //div[@class='section']/*[not(@class='section')]/dt | //div[@class='section']/*[not(@class='section')]/dd/*
+  - sk.wikipedia.org = //div[@id='mw-content-text']/* | //title
+  - cz.wikipedia.org = //div[@id='mw-content-text']/* | //title
+  - en.wikipedia.org = //div[@id='mw-content-text']/* | //title
+  - wiki.python.org = //div[@id='content']/* | //title
+  - default = //body/* | //title

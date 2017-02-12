@@ -70,8 +70,6 @@ try:
 		domain = "local_file"
 	
 		encoding = "utf-8"
-		if len(sys.argv) == 5 and sys.argv[3] == "--encoding":
-			encoding = sys.argv[4]
 	
 		file = open(file_name, "rt", encoding=encoding)
 		page_text = file.read()

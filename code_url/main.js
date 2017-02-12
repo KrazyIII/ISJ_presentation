@@ -35,7 +35,7 @@ define([
 
 		element[0].innerHTML = txt;
 		
-		console.log(txt);
+		//console.log(txt);
         //console.log(element);
     };
 	
