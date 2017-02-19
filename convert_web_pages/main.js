@@ -45,7 +45,7 @@ define([
 			}
 		}
 		else{
-			domains["stackoverflow.com"] = "//div[@id='question-header'] | //div[@class='post-text']/* | //span[@class='comment-copy']";
+			domains["stackoverflow.com"] = "//div[@id='question-header']/h1 | //div[@class='post-text']/* | //span[@class='comment-copy']";
 			domains["docs.python.org"] = "//div[@class='section']/*[not(@class='section') and not(name()='dl')] | //div[@class='section']/*[not(@class='section')]/dt | //div[@class='section']/*[not(@class='section')]/dd/*";
 			domains["sk.wikipedia.org"] = "//div[@id='mw-content-text']/* | //title";
 			domains["cz.wikipedia.org"] = "//div[@id='mw-content-text']/* | //title";
@@ -92,9 +92,19 @@ define([
 				label : 'Copy entire notebook',
 				icon : 'fa-cogs',
 				callback : function(){
-					$.get(require.toUrl("./convert.py"), function(python_text){
-						alert(python_text);
-					});
+					$("div.cell").addClass("jupyter-soft-selected");
+
+					var cells = IPython.notebook.get_selected_cells();
+					if (cells.length === 0) {
+						cells = [IPython.notebook.get_selected_cell()];
+					}
+					
+					for (var i=0; i < cells.length; i++) {
+						console.log(cells[i].get_text());
+						/*for(var j in cells[i]){
+							console.log(cells[i][j]);
+						}*/
+					}
 				}
 			}
 		]);

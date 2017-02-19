@@ -22,8 +22,12 @@ define([
 		//console.log(element[0].innerHTML);
 		
 		var txt = element[0].innerHTML;
+		//console.log(txt);
 				/*[`example`](reference)*/
-		txt = txt.replace(/<a (.*?)>(.*?<code>.*?<\/code>.*?)<\/a>/g, "<a class=\"code\" $1>$2</a>");
+		function href_replacer(match, offset, string) {
+			return match.replace(/<a (.*?)>(.*?<code>.*?<\/code>.*?)<\/a>/g, "<a class=\"code\" $1>$2</a>");
+		}
+		txt = txt.replace(/<a .*?>.*?<\/a>/g, href_replacer);
 				/*{c{example}http://www.example.com/reference }*/
 		txt = txt.replace(/{c{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
 				/*{ci{example}http://www.example.com/reference }*/

@@ -55,7 +55,6 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 
 	"""Iterative working of tags"""
 	def work_tag(elem, order=0, printing="markdown"):
-		global cell_type
 		global source
 		global listOrders
 		global table_head
@@ -96,6 +95,15 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 				source+= text
 			else:
 				source+= "["+text
+				endBody = "]("+ href.replace("(","").replace(")","") +")"
+		elif elem.tag == "img":
+			href = relative_to_absolute_ref(elem.get("src"))
+			text = elem.get("alt", "")
+
+			if printing == "code":
+				source+= text
+			else:
+				source+= "!["+text
 				endBody = "]("+ href.replace("(","").replace(")","") +")"
 		elif elem.tag == "code":
 			if printing == "code":

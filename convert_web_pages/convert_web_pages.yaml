@@ -11,7 +11,7 @@ Parameters:
   list_element:
     input_type: text
   default:
-  - stackoverflow.com = //div[@id='question-header'] | //div[@class='post-text']/* | //span[@class='comment-copy']
+  - stackoverflow.com = //div[@id='question-header']/h1 | //div[@class='post-text']/* | //span[@class='comment-copy']
   - docs.python.org = //div[@class='section']/*[not(@class='section') and not(name()='dl')] | //div[@class='section']/*[not(@class='section')]/dt | //div[@class='section']/*[not(@class='section')]/dd/*
   - sk.wikipedia.org = //div[@id='mw-content-text']/* | //title
   - cz.wikipedia.org = //div[@id='mw-content-text']/* | //title

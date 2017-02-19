@@ -19,7 +19,7 @@ def relative_to_absolute_ref(href):
 	else:
 		if href.startswith("./"):
 			href = href[2:]
-		return re.sub("(.*/).*","\\1",sourceURL) + href
+		return re.sub("(.*)/.*","\\1",sourceURL)+ "/" + href
 
 def is_url(url):
 	
@@ -55,7 +55,7 @@ try:
 		page_text = file.read()
 	
 		#sourceURL = "https://docs.python.org/3/library/json.html#module-json"
-		sourceURL = ""
+		sourceURL = file_name
 		outName = file_name
 	elif arg_num == 2 and sys.argv[1] == "--stdin":
 		sourceURL = ""
@@ -74,7 +74,7 @@ try:
 		file = open(file_name, "rt", encoding=encoding)
 		page_text = file.read()
 	
-		sourceURL = ""
+		sourceURL = file_name
 		outName = file_name
 except:
 	print("Usage:")
@@ -138,30 +138,37 @@ for title_text in html.xpath("/html/head/title/text()"):
 
 """Getting body of the html"""
 for tag in html.xpath(config_text):
+	def markdown_string(text):
+		#print("\""+text.replace("\n","\\n")+"\"")
+		text = re.sub("[\s]+"," ",text)
+		text = re.sub("^\s$","",text)
+		text = text.replace("_",r"\_").replace("*",r"\*")
+		#print("\""+text.replace("\n","\\n")+"\"")
+		return text
 	"""Creates a new cell 
 	   cellType cell_type if the new cell"""
-	def newCell(cellType, source):
-		cell = {}
-		cell["cell_type"] = cellType
-		cell["metadata"] = {}
-		cell["metadata"]["slideshow"] = {}
-		cell["metadata"]["slideshow"]["slide_type"] = "subslide"
-		cell["source"] = source
-		if cell["cell_type"] == "code":
-			cell["outputs"] = []
-			cell["metadata"]["collapsed"] = False
-			cell["execution_count"] = None
-		return cell
+	def create_slide(source, cellType):
+		global notebook
+		source = source.strip()
+		if source:
+			cell = {}
+			cell["cell_type"] = cellType
+			cell["metadata"] = {}
+			cell["metadata"]["slideshow"] = {}
+			cell["metadata"]["slideshow"]["slide_type"] = "subslide"
+			cell["source"] = source
+			if cell["cell_type"] == "code":
+				cell["outputs"] = []
+				cell["metadata"]["collapsed"] = False
+				cell["execution_count"] = None
+			notebook["cells"].append(cell)
 	
-	#newCell("markdown")
-	type = "markdown"
 	source = ""
 	listOrders=[]
 	table_head = False
 	
 	"""Iterative working of tags"""
 	def work_tag(elem, order=0, printing="markdown"):
-		global type
 		global source
 		global listOrders
 		global table_head
@@ -171,7 +178,7 @@ for tag in html.xpath(config_text):
 		remList = False
 		"""After the body"""
 		endBody = ""
-		
+
 		"""If text is null notebook can't run"""
 		if elem.text == None:
 			text = ""
@@ -179,17 +186,16 @@ for tag in html.xpath(config_text):
 			if elem.tag == "code" or printing == "code":
 				text = elem.text
 			elif printing == "markdown":
-				text = elem.text.replace("_",r"\_").replace("*",r"\*")
-				text = re.sub("[ \t]+"," ",text)
+				text = markdown_string(elem.text)
 			elif printing == "table":
-				text = elem.text.replace("_",r"\_").replace("*",r"\*")
-				text = text.replace("\n"," ")
-		
+				text = markdown_string(elem.text)
+
 		if elem.tag == "p" or elem.tag == "q" or elem.tag == "small" or elem.tag == "mark" or elem.tag == "del" or elem.tag == "ins" or elem.tag == "sub" or elem.tag == "sup":
 			source+= text
 		elif elem.tag == "pre":
 			"""Code"""
-			type = "code"
+			create_slide(source, "markdown")
+			source = ""
 			printing = "code"
 			source+= text
 		elif elem.tag == "span":
@@ -198,11 +204,20 @@ for tag in html.xpath(config_text):
 			source+= text
 		elif elem.tag == "a":
 			href = relative_to_absolute_ref(elem.get("href"))
-			
+
 			if printing == "code":
 				source+= text
 			else:
 				source+= "["+text
+				endBody = "]("+ href.replace("(","").replace(")","") +")"
+		elif elem.tag == "img":
+			href = relative_to_absolute_ref(elem.get("src"))
+			text = elem.get("alt", "")
+
+			if printing == "code":
+				source+= text
+			else:
+				source+= "!["+text
 				endBody = "]("+ href.replace("(","").replace(")","") +")"
 		elif elem.tag == "code":
 			if printing == "code":
@@ -223,52 +238,28 @@ for tag in html.xpath(config_text):
 			else:
 				source+= "*"+text
 				endBody = "*"
-		elif elem.tag == "h1":
+		elif elem.tag == "h1" or elem.tag == "h2" or elem.tag == "h3" or elem.tag == "h4" or elem.tag == "h5" or elem.tag == "h6":
 			if printing == "code":
 				source+= text
 			else:
-				source+= "# "+text
-				endBody = "\n"
-		elif elem.tag == "h2":
-			if printing == "code":
-				source+= text
-			else:
-				source+= "## "+text
-				endBody = "\n"
-		elif elem.tag == "h3":
-			if printing == "code":
-				source+= text
-			else:
-				source+= "### "+text
-				endBody = "\n"
-		elif elem.tag == "h4":
-			if printing == "code":
-				source+= text
-			else:
-				source+= "#### "+text
-				endBody = "\n"
-		elif elem.tag == "h5":
-			if printing == "code":
-				source+= text
-			else:
-				source+= "##### "+text
-				endBody = "\n"
-		elif elem.tag == "h6":
-			if printing == "code":
-				source+= text
-			else:
-				source+= "###### "+text
+				for x in range(int(elem.tag[1])):
+					source+= "#"
+				source+= " "+text
 				endBody = "\n"
 		elif elem.tag == "ul":
 			source+= "\n"
 			listOrders.append("unordered")
 			remList = True
 			printing = "table"
+			tail = False
+			endBody = "\n"
 		elif elem.tag == "ol":
 			source+= "\n"
 			listOrders.append("ordered")
 			remList = True
 			printing = "table"
+			tail = False
+			endBody = "\n"
 		elif elem.tag == "li":
 			for num in listOrders[1:]:
 				source+= "  "
@@ -277,28 +268,27 @@ for tag in html.xpath(config_text):
 			if listOrders[-1] == "ordered":
 				source+= str(order)+". "
 			source+= text
-			endBody = '\n'
+			endBody = "\n"
 			printing = "table"
-			tail = False
 		elif elem.tag == "dd":
 			source+= "  "+text
-			endBody = '\n'
+			endBody = "\n"
 			printing = "table"
-			tail = False
 		elif elem.tag == "dt":
 			source+= text
-			endBody = '\n'
+			endBody = "\n"
 			printing = "table"
-			tail = False
 		elif elem.tag == "dl":
 			source+= "\n"
 			printing = "table"
+			tail = False
 		elif elem.tag == "table":
-			source+= "\n\n"
+			source+= "\n"
 			table_head = True
 			printing = "table"
+			tail = False
 		elif elem.tag == "tr":
-			endBody = '|\n'
+			endBody = "|\n"
 			tail = False
 			if table_head:
 				table_head = False
@@ -308,51 +298,50 @@ for tag in html.xpath(config_text):
 				endBody+= "|\n"
 		elif elem.tag == "td":
 			source+= "| " + text
-			endBody = ' '
+			endBody = " "
 			for i in range(1 , int(elem.get("colspan", 1))):
 				endBody+= "|"
-			endBody+= ' '
-			tail = False
+			endBody+= " "
 		elif elem.tag == "th":
 			source+= "| **" + text
-			endBody = '** '
+			endBody = "** "
 			for i in range(1 , int(elem.get("colspan", 1))):
 				endBody+= "|"
-			endBody+= ' '
-			tail = False
+			endBody+= " "
 		elif elem.tag == "caption":
 			source+= text
-			endBody = '\n'
-			tail = False
+			endBody = "\n"
 		elif elem.tag == "title":
 			source+= "# "+text
-			tail = False
 		else:
 			tail = False
-		
+
 		"""Work childs"""
 		for index, child in enumerate(list(elem), start=1):
-			work_tag(child, index, printing)
-		
+			ret_tail = work_tag(child, index, printing)
+			if tail and ret_tail:
+				if printing == "code":
+					source+= ret_tail
+				else:
+					source+= markdown_string(ret_tail)
+
 		"""Write end of body"""
 		source+= endBody
-		"""Write tail"""
-		if elem.tail != None and tail:
-			if printing == "code":
-				source+= elem.tail
-			elif printing == "markdown":
-				source+= re.sub("[ \t]+"," ",elem.tail.replace("_",r"\_").replace("*",r"\*"))
-			elif printing == "table":
-				source+= re.sub("[ \t]+"," ",elem.tail.replace("_",r"\_").replace("*",r"\*"))
+
 		if remList:
 			listOrders.pop()
-			
-			
+		"""print code cell"""
+		if elem.tag == "pre":
+			create_slide(source, "code")
+			source = ""
+		"""return tail"""
+		return elem.tail
+
+
 	"""1st call"""
 	work_tag(tag)
-	
-	if source:
-		notebook["cells"].append(newCell(type, source))
+    
+	create_slide(source, "markdown")
 
 """Output"""
 #print(json.dumps(notebook, indent=4))
