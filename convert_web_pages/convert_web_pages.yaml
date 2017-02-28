@@ -13,8 +13,8 @@ Parameters:
   default:
   - stackoverflow.com = //div[@id='question-header']/h1 | //div[@class='post-text']/* | //span[@class='comment-copy']
   - docs.python.org = //div[@class='section']/*[not(@class='section') and not(name()='dl')] | //div[@class='section']/*[not(@class='section')]/dt | //div[@class='section']/*[not(@class='section')]/dd/*
-  - sk.wikipedia.org = //div[@id='mw-content-text']/* | //title
-  - cz.wikipedia.org = //div[@id='mw-content-text']/* | //title
-  - en.wikipedia.org = //div[@id='mw-content-text']/* | //title
+  - wikipedia.org = //div[@id='mw-content-text']/* | //title
   - wiki.python.org = //div[@id='content']/* | //title
+  - github.com = //div[@id='readme']/article/*
+  - readthedocs.io = //div[@class='section']/*[not(@class='section')]
   - default = //body/* | //title

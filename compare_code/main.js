@@ -13,7 +13,7 @@ define([
 	
 	
 	var compare_code_callback = IPython.CellToolbar.utils.checkbox_ui_generator(
-        'compare_code',
+        "Compare cells",
         // setter
         function(cell, value) {
             cell.metadata.compare_code = value;
@@ -35,22 +35,22 @@ define([
 		// Register a callback to create a UI element for a cell toolbar.
         IPython.CellToolbar.register_callback('compare_code', compare_code_callback);
         // Register a preset of UI elements forming a cell toolbar.
-        IPython.CellToolbar.register_preset('Compare Code', ['compare_code']);
+        IPython.CellToolbar.register_preset("Compare cells", ['compare_code']);
 		
 		Jupyter.toolbar.add_buttons_group([
 			{
 				id : 'compare_code',
-				label : 'Compare Code',
+				label : 'Compare cells',
 				icon : 'fa-recycle',
 				callback : function(){
 					//console.log(IPython.notebook.metadata);
-					if(IPython.notebook.metadata.celltoolbar === 'Compare Code'){
+					if(IPython.notebook.metadata.celltoolbar === "Compare cells"){
 						IPython.notebook.metadata.celltoolbar = 'Slideshow';
 						IPython.CellToolbar.activate_preset('Slideshow', this.events);
 					}
 					else{
-						IPython.notebook.metadata.celltoolbar = 'Compare Code';
-						IPython.CellToolbar.activate_preset('Compare Code', this.events);
+						IPython.notebook.metadata.celltoolbar = "Compare cells";
+						IPython.CellToolbar.activate_preset("Compare cells", this.events);
 					}
 					//console.log(IPython.notebook.metadata);
 				}
@@ -75,6 +75,63 @@ define([
 					IPython.notebook.metadata.celltoolbar = 'Slideshow';
 					IPython.CellToolbar.activate_preset('Slideshow', this.events);
 				}
+			},
+			{
+				id : 'rise_global_settings',
+				label : 'Set RISE settings for this notebook',
+				icon : 'fa-cog',
+				callback : function(){
+					for(var i in IPython.notebook.metadata.livereveal){
+						console.log(i+" = "+IPython.notebook.metadata.livereveal[i]);
+					}
+					
+					var txt = ''+
+'%%javascript\n'+
+'IPython.notebook.metadata["livereveal"] = {};\n'+
+'\n'+
+'//Set theme\n'+
+'//Values |"simple"|, "beige", "blood", "default", "moon", "night", "serif", "sky", "solarized"\n'+
+'IPython.notebook.metadata.livereveal["theme"] = "simple";\n'+
+'\n'+
+'//Set global transition type\n'+
+'//Values |"linear"|, "none", "fade", "slide"\n'+
+'IPython.notebook.metadata.livereveal["transition"] = "linear";\n'+
+'\n'+
+'//Scrolable slides\n'+
+'//Values true, |false|\n'+
+'IPython.notebook.metadata.livereveal["scroll"] = false;\n'+
+'\n'+
+'//Start slidechow at "selected" or "beginning"\n'+
+'//Values |"beginning"|, "selected"\n'+
+'IPython.notebook.metadata.livereveal["start_slideshow_at"] = "beginning";\n'+
+'\n'+
+'//Show controls\n'+
+'//Values |true| false\n'+
+'IPython.notebook.metadata.livereveal["controls"] = true;\n'+
+'\n'+
+'//Show progress\n'+
+'//Values |true|, false\n'+
+'IPython.notebook.metadata.livereveal["progress"] = true;\n'+
+'\n'+
+'//Show history\n'+
+'//Values |true|, false\n'+
+'IPython.notebook.metadata.livereveal["history"] = true;\n'+
+'\n'+
+'//Show number of slide\n'+
+'//Values |true|, false\n'+
+'IPython.notebook.metadata.livereveal["slideNumber"] = true;\n'+
+'\n'+
+'//Set width and height of the slide\n'+
+'//Default values "width" = 1140, "height" = 855, ratio 4:3\n'+
+'IPython.notebook.metadata.livereveal["width"] = 1140;\n'+
+'IPython.notebook.metadata.livereveal["height"] = 855;\n'+
+'\n'+
+'IPython.notebook.metadata.livereveal["minScale"] = 1.0; //we need this for codemirror to work right\n';
+					var t_cell = IPython.notebook.insert_cell_below();
+					t_cell.set_text(txt);
+					var t_index = IPython.notebook.get_cells().indexOf(t_cell);
+					IPython.notebook.to_code(t_index);
+				}
 			}
 		]);
 		
@@ -88,7 +145,6 @@ define([
 		
 		$('#maintoolbar').bind('addClassEvent', function(type, arguments){
 			if (arguments === 'reveal_tagging'){
-
 				//console.log('---------');
 				//console.log(arguments);
 				//console.log('---------');
@@ -108,8 +164,13 @@ define([
 					}
 				
 					if ((cell.metadata || {}).compare_code){
-						console.log('#slide-'+slide_counter+'-'+subslide_counter);
-						$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition-speed',"instant")
+						if(slide_counter == -1) slide_counter = 0;
+						if(subslide_counter == -1) subslide_counter = 0;
+						
+						if(cell.metadata.compare_code != "default"){
+							console.log('#slide-'+slide_counter+'-'+subslide_counter+' '+cell.metadata.compare_code);
+							$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition-speed', "instant")
+						}
 					}
 				}
 			}

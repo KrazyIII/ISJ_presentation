@@ -29,13 +29,13 @@ define([
 		}
 		txt = txt.replace(/<a .*?>.*?<\/a>/g, href_replacer);
 				/*{c{example}http://www.example.com/reference }*/
-		txt = txt.replace(/{c{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
+		txt = txt.replace(/{c{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\"><code>$1</code></a>");
 				/*{ci{example}http://www.example.com/reference }*/
-		txt = txt.replace(/{ci{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\">$1</a>");
+		txt = txt.replace(/{ci{(.*?)}<a.*?>(.*?)<\/a> }/g, "<a class=\"code\" href=\"$2\"><code>$1</code></a>");
 				/*{c{example}reference }*/
-		txt = txt.replace(/{c{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\">$1</a>");
+		txt = txt.replace(/{c{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\" target=\"_blank\"><code>$1</code></a>");
 				/*{ci{example}reference }*/
-		txt = txt.replace(/{ci{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\">$1</a>");
+		txt = txt.replace(/{ci{(.*?)}(.*?) }/g, "<a class=\"code\" href=\"$2\"><code>$1</code></a>");
 
 		element[0].innerHTML = txt;
 		

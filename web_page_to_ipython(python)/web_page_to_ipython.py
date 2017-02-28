@@ -4,22 +4,8 @@ import sys
 import lxml.html
 import json
 import configparser
+import os
 from lxml import etree
-
-
-def relative_to_absolute_ref(href):
-	global sourceURL
-	
-	if re.match("(http)|(https)://", href):
-		return href
-	elif href.startswith("#"):
-		return re.sub("(.*)#.*","\\1",sourceURL) + href
-	elif href.startswith("/"):
-		return re.sub("(.*://.*?)/.*","\\1",sourceURL) + href
-	else:
-		if href.startswith("./"):
-			href = href[2:]
-		return re.sub("(.*)/.*","\\1",sourceURL)+ "/" + href
 
 def is_url(url):
 	
@@ -41,7 +27,8 @@ try:
 
 		page_text = urllib.request.urlopen(url).read()
 		sourceURL = url
-		outName = url
+		outName = sourceURL
+		source_type = "web"
 	elif (arg_num == 3 or arg_num == 5) and sys.argv[1] == "--local":
 		file_name = sys.argv[2]
 	
@@ -56,7 +43,8 @@ try:
 	
 		#sourceURL = "https://docs.python.org/3/library/json.html#module-json"
 		sourceURL = file_name
-		outName = file_name
+		outName = sourceURL
+		source_type = "local"
 	elif arg_num == 2 and sys.argv[1] == "--stdin":
 		sourceURL = ""
 		outName = "stdin"
@@ -64,6 +52,7 @@ try:
 		domain = "stdin"
 	
 		page_text = sys.stdin.read()
+		source_type = "local"
 	else:
 		file_name = " ".join(sys.argv[1:])
 	
@@ -76,6 +65,7 @@ try:
 	
 		sourceURL = file_name
 		outName = file_name
+		source_type = "local"
 except:
 	print("Usage:")
 	print("URL: python web_page_to_ipython --url http://www.url.com/some_page")
@@ -89,12 +79,16 @@ except:
 config_text = ""
 config = configparser.ConfigParser()
 config.read('web_page_to_ipython.py.config')
+
+reduced_domain = re.sub(".*\.(.*\..*)", "\\1", domain)
+
 if domain in config:
 	config_text = config[domain]['find']
+elif reduced_domain in config:
+	config_text = config[reduced_domain]['find']
 else:
 	print("Domain "+ domain +" is not in config\n")
 	exit()
-
 
 """Converting web page"""
 html = lxml.html.fromstring(page_text)
@@ -134,10 +128,56 @@ notebook["cells"] = []
 for title_text in html.xpath("/html/head/title/text()"):
 	outName = title_text
 
+outName = re.sub('["*/:<>?\|]', ' ', outName)
+
 #print(html.xpath("//div[@class='post-text']/p/text()"))
 
 """Getting body of the html"""
 for tag in html.xpath(config_text):
+	def relative_to_absolute_ref(href):
+		global sourceURL
+		global source_type
+		
+		if source_type == "web":
+			if re.match("http://|https://|ftp://|mailto:|file:", href):
+				return href
+			elif href.startswith("#"):
+				return re.sub("(.*)#.*","\\1",sourceURL) + href
+			elif href.startswith("/"):
+				return re.sub("(.*://.*?)/.*","\\1",sourceURL) + href
+			else:
+				if href.startswith("./"):
+					href = href[2:]
+				return re.sub("(.*/).*","\\1",sourceURL) + href
+		if source_type == "local":
+			if re.match("http://|https://|ftp://|mailto:|file:", href):
+				return href
+			elif os.path.isabs(href):
+				return href
+			elif href.startswith("#"):
+				return re.sub("(.*)#.*","\\1",sourceURL) + href
+			else:
+				return re.sub("(.*\\"+os.sep+").*","\\1",sourceURL) + href
+	def download_image(src):
+		global outName
+		global source_type
+		
+		
+		img_name = re.sub(".*/(.*)", "\\1", outName)
+		img_name = re.sub("(.*)\..*", "\\1", img_name)
+		
+		if not os.path.exists(img_name):
+			os.makedirs(img_name)
+		
+		img_name+= "/"
+		img_name+= re.sub(".*/(.*)", "\\1", src)
+		#print(src)
+		#print(img_name)
+		if source_type == "web" or re.match("http://|https://|ftp://|mailto:|file:", src):
+			urllib.request.urlretrieve(relative_to_absolute_ref(src), img_name)
+		if source_type == "local":
+			shutil.copyfile(relative_to_absolute_ref(src), img_name)
+		return img_name
 	def markdown_string(text):
 		#print("\""+text.replace("\n","\\n")+"\"")
 		text = re.sub("[\s]+"," ",text)
@@ -211,8 +251,12 @@ for tag in html.xpath(config_text):
 				source+= "["+text
 				endBody = "]("+ href.replace("(","").replace(")","") +")"
 		elif elem.tag == "img":
-			href = relative_to_absolute_ref(elem.get("src"))
-			text = elem.get("alt", "")
+			try:
+				href = download_image(elem.get("src"))
+				text = elem.get("alt", "")
+			except:
+				href = ""
+				text = "Image could not be downloaded"
 
 			if printing == "code":
 				source+= text
@@ -345,6 +389,5 @@ for tag in html.xpath(config_text):
 
 """Output"""
 #print(json.dumps(notebook, indent=4))
-outName = re.sub('["*/:<>?\|]', ' ', outName)
 outFile = open(outName+'.ipynb', 'w', encoding="utf-8")
 outFile.write(json.dumps(notebook, indent=4))

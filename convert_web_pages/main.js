@@ -1,6 +1,11 @@
 //
 
 /*
+conda 32 bit
+obrázky v prezentácií
+nbpresent
+rozdelenie
+
 https://ipython.org/ipython-doc/3/interactive/magics.html#cell-magics
 %%python
     %%python script magic
@@ -31,6 +36,7 @@ define([
 	
 	var base_url = utils.get_body_data("baseUrl");
     var config = new configmod.ConfigSection('notebook', {base_url: base_url});
+	var define_insert_html_page_class = true;
 	
 	config.loaded.then(function() {
 		
@@ -47,10 +53,10 @@ define([
 		else{
 			domains["stackoverflow.com"] = "//div[@id='question-header']/h1 | //div[@class='post-text']/* | //span[@class='comment-copy']";
 			domains["docs.python.org"] = "//div[@class='section']/*[not(@class='section') and not(name()='dl')] | //div[@class='section']/*[not(@class='section')]/dt | //div[@class='section']/*[not(@class='section')]/dd/*";
-			domains["sk.wikipedia.org"] = "//div[@id='mw-content-text']/* | //title";
-			domains["cz.wikipedia.org"] = "//div[@id='mw-content-text']/* | //title";
-			domains["en.wikipedia.org"] = "//div[@id='mw-content-text']/* | //title";
+			domains["wikipedia.org"] = "//div[@id='mw-content-text']/* | //title";
 			domains["wiki.python.org"] = "//div[@id='content']/* | //title";
+			domains["github.com"] = "//div[@id='readme']/article/*";
+			domains["readthedocs.io"] = "//div[@class='section']/*[not(@class='section')]";
 			domains["default"] = "//body/* | //title";
 		}
 		
@@ -58,7 +64,7 @@ define([
 			{
 				id : 'convert_web_pages',
 				label : 'Convert web pages to ipython',
-				icon : 'fa-recycle',
+				icon : 'fa-file',
 				callback : function(){
 					var conv_url = prompt("Enter URL of page", "URL");
 					if (conv_url != null) {
@@ -72,12 +78,26 @@ define([
 						if(domains.hasOwnProperty(conv_domain)){
 							dom_xpath = domains[conv_domain];
 						}
+						else{
+							var reduced_conv_domain = conv_domain.replace(/.*\.(.*\..*)/g, "$1");
+							if(domains.hasOwnProperty(reduced_conv_domain)){
+								dom_xpath = domains[reduced_conv_domain];
+							}
+						}
 						
 						$.get(require.toUrl("./convert.py"), function(python_text){
+							IPython.notebook.kernel.execute(python_text);
+							
 							var txt = '';
-							txt+= 'url = "' + conv_url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n'
-							txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n\n'
-							txt+= python_text;
+							txt+= 'url = "' + conv_url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n';
+							txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
+							
+							var img_file = IPython.notebook.notebook_path;
+							img_file = img_file.replace(/.*\/(.*)/g, "$1")
+							img_file = img_file.replace(/(.*)\..*/g, "$1")
+							txt+= 'image_file = "'+ img_file +'/"\n\n';
+							
+							txt+= 'insert_html_page(url, xpath, image_file).start()';
 							
 							var t_cell = IPython.notebook.insert_cell_below();
 							t_cell.set_text(txt);
@@ -90,8 +110,13 @@ define([
 			{
 				id : 'copy_notebook',
 				label : 'Copy entire notebook',
-				icon : 'fa-cogs',
+				icon : 'fa-copy',
 				callback : function(){
+					if(define_insert_html_page_class){
+						console.log(IPython.notebook.notebook_path);
+						define_insert_html_page_class = false;
+					}
+					
 					$("div.cell").addClass("jupyter-soft-selected");
 
 					var cells = IPython.notebook.get_selected_cells();
