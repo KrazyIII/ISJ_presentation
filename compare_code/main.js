@@ -1,15 +1,60 @@
 //
 
+/*
+%%javascript
+IPython.notebook.metadata["livereveal"] = {};
+
+//Set theme
+//Values |"simple"|, "beige", "blood", "default", "moon", "night", "serif", "sky", "solarized"
+IPython.notebook.metadata.livereveal["theme"] = "simple";
+
+//Set global transition type
+//Values |"linear"|, "none", "fade", "slide"
+IPython.notebook.metadata.livereveal["transition"] = "linear";
+
+//Scrolable slides
+//Values true, |false|
+IPython.notebook.metadata.livereveal["scroll"] = false;
+
+//Start slidechow at "selected" or "beginning"
+//Values |"beginning"|, "selected"
+IPython.notebook.metadata.livereveal["start_slideshow_at"] = "beginning";
+
+//Show controls
+//Values |true| false
+IPython.notebook.metadata.livereveal["controls"] = true;
+
+//Show progress
+//Values |true|, false
+IPython.notebook.metadata.livereveal["progress"] = true;
+
+//Show history
+//Values |true|, false
+IPython.notebook.metadata.livereveal["history"] = true;
+
+//Show number of slide
+//Values |true|, false
+IPython.notebook.metadata.livereveal["slideNumber"] = true;
+
+//Set width and height of the slide
+//Default values "width" = 1140, "height" = 855, ratio 4:3
+IPython.notebook.metadata.livereveal["width"] = 1140;
+IPython.notebook.metadata.livereveal["height"] = 855;
+
+IPython.notebook.metadata.livereveal["minScale"] = 1.0; //we need this for codemirror to work right
+*/
+
 define([
     'base/js/namespace',
     'jquery',
     'require',
     'notebook/js/cell',
     'base/js/security',
-    'components/marked/lib/marked',
     'base/js/events',
-    'notebook/js/textcell'
-], function(IPython, $, require, cell, security, marked, events, textcell) {
+    'notebook/js/textcell',
+	'base/js/utils',
+    'services/config'
+], function(IPython, $, require, cell, security, events, textcell, utils, configmod) {
 	
 	
 	var compare_code_callback = IPython.CellToolbar.utils.checkbox_ui_generator(
@@ -25,7 +70,55 @@ define([
         }
     );
 	
-	var load_ipython_extension = function() {
+	var base_url = utils.get_body_data("baseUrl");
+    var config = new configmod.ConfigSection('notebook', {base_url: base_url});
+	
+	config.loaded.then(function() {
+		
+		var rise_config = {};
+		
+		if(config.data.hasOwnProperty('default_config_for_rise')){
+			for(var i in config.data.default_config_for_rise){
+				var indx = config.data.default_config_for_rise[i].indexOf("=");
+				var param = config.data.default_config_for_rise[i].substr(0, indx).trim();
+				var value = config.data.default_config_for_rise[i].substr(indx + 1).trim();
+				if(value == 'true'){
+					rise_config[param] = true;
+				}else if(value == 'false'){
+					rise_config[param] = false;
+				}else if(isNaN(value)){
+					rise_config[param] = value;
+				}else{
+					rise_config[param] = +value;
+				}
+				
+			}
+		}
+		else{
+			rise_config["theme"] = "simple";
+			rise_config["transition"] = "linear";
+			rise_config["scroll"] = false;
+			rise_config["start_slideshow_at"] = "beginning";
+			rise_config["controls"] = true;
+			rise_config["progress"] = true;
+			rise_config["history"] = true;
+			rise_config["slideNumber"] = true;
+			rise_config["width"] = 1140
+			rise_config["height"] = 855
+			rise_config["minScale"] = 1.0
+		}
+		
+		// Set global config when kernel is ready
+        events.on("kernel_ready.Kernel", function () {
+            if(!IPython.notebook.metadata.hasOwnProperty("livereveal")){
+				IPython.notebook.metadata["livereveal"] = {};
+				
+				for(item in rise_config){
+					IPython.notebook.metadata.livereveal[item] = rise_config[item];
+				}
+			}
+        });
+		
 		var link = document.createElement("link");
         link.type = "text/css";
         link.rel = "stylesheet";
@@ -81,52 +174,19 @@ define([
 				label : 'Set RISE settings for this notebook',
 				icon : 'fa-cog',
 				callback : function(){
-					for(var i in IPython.notebook.metadata.livereveal){
+					/*for(var i in IPython.notebook.metadata.livereveal){
 						console.log(i+" = "+IPython.notebook.metadata.livereveal[i]);
+					}*/
+					
+					var txt = '%%javascript\n\n';
+					for(item in IPython.notebook.metadata.livereveal){
+						if(typeof IPython.notebook.metadata.livereveal[item] === 'string'){
+							txt+= "IPython.notebook.metadata.livereveal[\""+item+"\"] = \""+IPython.notebook.metadata.livereveal[item]+"\";\n";
+						}else{
+							txt+= "IPython.notebook.metadata.livereveal[\""+item+"\"] = "+IPython.notebook.metadata.livereveal[item]+";\n";
+						}
 					}
 					
-					var txt = ''+
-'%%javascript\n'+
-'IPython.notebook.metadata["livereveal"] = {};\n'+
-'\n'+
-'//Set theme\n'+
-'//Values |"simple"|, "beige", "blood", "default", "moon", "night", "serif", "sky", "solarized"\n'+
-'IPython.notebook.metadata.livereveal["theme"] = "simple";\n'+
-'\n'+
-'//Set global transition type\n'+
-'//Values |"linear"|, "none", "fade", "slide"\n'+
-'IPython.notebook.metadata.livereveal["transition"] = "linear";\n'+
-'\n'+
-'//Scrolable slides\n'+
-'//Values true, |false|\n'+
-'IPython.notebook.metadata.livereveal["scroll"] = false;\n'+
-'\n'+
-'//Start slidechow at "selected" or "beginning"\n'+
-'//Values |"beginning"|, "selected"\n'+
-'IPython.notebook.metadata.livereveal["start_slideshow_at"] = "beginning";\n'+
-'\n'+
-'//Show controls\n'+
-'//Values |true| false\n'+
-'IPython.notebook.metadata.livereveal["controls"] = true;\n'+
-'\n'+
-'//Show progress\n'+
-'//Values |true|, false\n'+
-'IPython.notebook.metadata.livereveal["progress"] = true;\n'+
-'\n'+
-'//Show history\n'+
-'//Values |true|, false\n'+
-'IPython.notebook.metadata.livereveal["history"] = true;\n'+
-'\n'+
-'//Show number of slide\n'+
-'//Values |true|, false\n'+
-'IPython.notebook.metadata.livereveal["slideNumber"] = true;\n'+
-'\n'+
-'//Set width and height of the slide\n'+
-'//Default values "width" = 1140, "height" = 855, ratio 4:3\n'+
-'IPython.notebook.metadata.livereveal["width"] = 1140;\n'+
-'IPython.notebook.metadata.livereveal["height"] = 855;\n'+
-'\n'+
-'IPython.notebook.metadata.livereveal["minScale"] = 1.0; //we need this for codemirror to work right\n';
 					var t_cell = IPython.notebook.insert_cell_below();
 					t_cell.set_text(txt);
 					var t_index = IPython.notebook.get_cells().indexOf(t_cell);
@@ -175,6 +235,10 @@ define([
 				}
 			}
 		});
+	});
+	
+	function load_ipython_extension () {
+        config.load();
     };
 	
 	return {

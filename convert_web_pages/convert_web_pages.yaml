@@ -17,4 +17,4 @@ Parameters:
   - wiki.python.org = //div[@id='content']/* | //title
   - github.com = //div[@id='readme']/article/*
   - readthedocs.io = //div[@class='section']/*[not(@class='section')]
-  - default = //body/* | //title
+  - reveal.js = //div[@class='slides']/section | //div[@class='slides']/section/section

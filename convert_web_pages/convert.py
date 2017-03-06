@@ -4,6 +4,7 @@ import re
 import os
 import shutil
 from IPython.display import display_javascript
+import win32clipboard
 
 class insert_html_page:
 	url = ""
@@ -95,23 +96,28 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 		if elem.text == None:
 			text = ""
 		else:
-			if elem.tag == "code" or printing == "code":
+			if elem.tag == "code" or elem.tag == "tt" or printing == "code":
 				text = elem.text
 			elif printing == "markdown":
 				text = self.markdown_string(elem.text)
 			elif printing == "table":
 				text = self.markdown_string(elem.text)
 
-		if elem.tag == "p" or elem.tag == "q" or elem.tag == "small" or elem.tag == "mark" or elem.tag == "del" or elem.tag == "ins" or elem.tag == "sub" or elem.tag == "sup":
+		if elem.tag == "p" or elem.tag == "q" or elem.tag == "blockquote" or elem.tag == "section":
 			self.source+= text
+			endBody = "\n\n"
+		elif elem.tag == "small" or elem.tag == "del" or elem.tag == "ins" or elem.tag == "sub" or elem.tag == "sup" or elem.tag == "bdi" or elem.tag == "center" or elem.tag == "left" or elem.tag == "right" or elem.tag == "data":
+			self.source+= text
+		elif elem.tag == "abbr":
+			self.source+= text
+			if elem.get("title"):
+				endBody = "("+elem.get("title")+")"
 		elif elem.tag == "pre":
 			"""Code"""
 			self.create_slide(self.source, "markdown")
 			printing = "code"
 			self.source+= text
-		elif elem.tag == "span":
-			self.source+= text
-		elif elem.tag == "div":
+		elif elem.tag == "span" or elem.tag == "div" or elem.tag == "article" or elem.tag == "aside" or elem.tag == "body":
 			self.source+= text
 		elif elem.tag == "a":
 			href = self.relative_to_absolute_ref(elem.get("href"))
@@ -134,20 +140,20 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 			else:
 				self.source+= "!["+text
 				endBody = "]("+ href.replace("(","").replace(")","") +")"
-		elif elem.tag == "code":
+		elif elem.tag == "code" or elem.tag == "tt":
 			if printing == "code":
 				self.source+= text
 			else:
 				self.source+= " `"+text
 				endBody = "` "
 			printing = "code"
-		elif elem.tag == "strong" or elem.tag == "b" or elem.tag == "big":
+		elif elem.tag == "strong" or elem.tag == "b" or elem.tag == "big" or elem.tag == "mark":
 			if printing == "code":
 				self.source+= text
 			else:
 				self.source+= "**"+text
 				endBody = "**"
-		elif elem.tag == "em" or elem.tag == "i":
+		elif elem.tag == "em" or elem.tag == "i" or elem.tag == "address" or elem.tag == "cite":
 			if printing == "code":
 				self.source+= text
 			else:
@@ -228,6 +234,8 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 			endBody = "\n"
 		elif elem.tag == "title":
 			self.source+= "# "+text
+		elif elem.tag == "br":
+			self.source+= "\n\n"
 		else:
 			tail = False
 
@@ -253,7 +261,19 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 
 	def start(self):
 		"""Getting the dokument"""
-		if re.match("(http)|(https)://", self.url):
+		if self.url == "":
+			win32clipboard.OpenClipboard(0)
+			try:
+				page_text = win32clipboard.GetClipboardData(win32clipboard.RegisterClipboardFormat("HTML Format"))
+				page_text = page_text.decode("utf-8")
+				page_text = re.sub("(?s).*(<html>(?s).*</html>)(?s).*", "\\1", page_text)
+			except TypeError:
+				try:
+					page_text = win32clipboard.GetClipboardData()
+				except TypeError:
+					page_text = ''
+			win32clipboard.CloseClipboard()
+		elif re.match("(http)|(https)://", self.url):
 			page_text = urllib.request.urlopen(self.url).read()
 			self.source_type = "web"
 		else:

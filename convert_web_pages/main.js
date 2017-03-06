@@ -6,6 +6,9 @@ obrázky v prezentácií
 nbpresent
 rozdelenie
 
+lxml
+pywin32
+
 https://ipython.org/ipython-doc/3/interactive/magics.html#cell-magics
 %%python
     %%python script magic
@@ -57,7 +60,7 @@ define([
 			domains["wiki.python.org"] = "//div[@id='content']/* | //title";
 			domains["github.com"] = "//div[@id='readme']/article/*";
 			domains["readthedocs.io"] = "//div[@class='section']/*[not(@class='section')]";
-			domains["default"] = "//body/* | //title";
+			domains["reveal.js"] = "//div[@class='slides']/section | //div[@class='slides']/section/section";
 		}
 		
 		Jupyter.toolbar.add_buttons_group([
@@ -66,7 +69,7 @@ define([
 				label : 'Convert web pages to ipython',
 				icon : 'fa-file',
 				callback : function(){
-					var conv_url = prompt("Enter URL of page", "URL");
+					var conv_url = prompt("Enter URL of page", "");
 					if (conv_url != null) {
 						var conv_domains = conv_url.match(/(?:.*:\/\/)([^\/\r\n]+\.[^\/\r\n]+)/);
 						var conv_domain = 'default';
@@ -74,7 +77,7 @@ define([
 							conv_domain = conv_domains[1];
 						}
 						
-						var dom_xpath = '/html/body/*';
+						var dom_xpath = '/html/body';
 						if(domains.hasOwnProperty(conv_domain)){
 							dom_xpath = domains[conv_domain];
 						}

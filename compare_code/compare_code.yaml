@@ -4,3 +4,21 @@ Description: Compare code cells
 Link: readme.md
 Main: main.js
 Compatibility: 4.x
+Parameters:
+- name: default_config_for_rise
+  description: Default config for rise
+  input_type: list
+  list_element:
+    input_type: text
+  default:
+  - theme = simple
+  - transition = linear
+  - scroll = false
+  - start_slideshow_at = beginning
+  - controls = true
+  - progress = true
+  - history = true
+  - slideNumber = true
+  - width = 1140
+  - height = 855
+  - minScale = 1.0
