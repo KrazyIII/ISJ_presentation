@@ -51,6 +51,13 @@ define([
         link.href = require.toUrl("./custom.css");
         document.getElementsByTagName("head")[0].appendChild(link);
 		
+		var google_fonts = document.createElement("link");
+        google_fonts.type = "text/css";
+        google_fonts.rel = "stylesheet";
+        //google_fonts.href = require.toUrl("https://fonts.googleapis.com/css?family=Inconsolata");
+        google_fonts.href = require.toUrl("https://fonts.googleapis.com/css?family=Roboto+Mono");
+        document.getElementsByTagName("head")[0].appendChild(google_fonts);
+		
 		// Mark cells as not yet renederd on start
 		var original_render = textcell.MarkdownCell.prototype.render;
 		textcell.MarkdownCell.prototype.render = function() {

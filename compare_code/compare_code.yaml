@@ -22,3 +22,20 @@ Parameters:
   - width = 1140
   - height = 855
   - minScale = 1.0
+- name: default_config_for_rise_description
+  description: Description for RISE config
+  input_type: list
+  list_element:
+    input_type: text
+  default:
+  - theme = Set theme.\nValues |"simple"|, "beige", "blood", "default", "moon", "night", "serif", "sky", "solarized"
+  - transition = Set global transition type.\nValues |"linear"|, "none", "fade", "slide"
+  - scroll = Scrolable slides.\nValues true, |false|
+  - start_slideshow_at = Start slidechow at "selected" cell or "beginning" (first) cell.\nValues |"beginning"|, "selected"
+  - controls = Show controls.\nValues |true| false
+  - progress = Show progress.\nValues |true|, false
+  - history = Show history.\nValues |true|, false
+  - slideNumber = Show number of slide.\nValues |true|, false
+  - width = Set slide width.\nDefault value = 1140
+  - height = Set slide height.\nDefault value = 855
+  - minScale = We need this for codemirror to work right.\nDefault value = 1.0

@@ -71,10 +71,9 @@ define([
 				callback : function(){
 					var conv_url = prompt("Enter URL of page", "");
 					if (conv_url != null) {
-						var conv_domains = conv_url.match(/(?:.*:\/\/)([^\/\r\n]+\.[^\/\r\n]+)/);
-						var conv_domain = 'default';
-						if(conv_domains != null && conv_domains.hasOwnProperty(1)){
-							conv_domain = conv_domains[1];
+						var conv_domain = conv_url.replace(/(?:.*:\/\/)([^\/\r\n]+\.[^\/\r\n]+).*/, "$1");
+						if(conv_domain == conv_url){
+							conv_domain = 'default';
 						}
 						
 						var dom_xpath = '/html/body';
@@ -88,25 +87,27 @@ define([
 							}
 						}
 						
-						$.get(require.toUrl("./convert.py"), function(python_text){
+						if(define_insert_html_page_class) $.get(require.toUrl("./convert.py"), function(python_text){
 							IPython.notebook.kernel.execute(python_text);
-							
-							var txt = '';
-							txt+= 'url = "' + conv_url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n';
-							txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
-							
-							var img_file = IPython.notebook.notebook_path;
-							img_file = img_file.replace(/.*\/(.*)/g, "$1")
-							img_file = img_file.replace(/(.*)\..*/g, "$1")
-							txt+= 'image_file = "'+ img_file +'/"\n\n';
-							
-							txt+= 'insert_html_page(url, xpath, image_file).start()';
-							
-							var t_cell = IPython.notebook.insert_cell_below();
-							t_cell.set_text(txt);
-							var t_index = IPython.notebook.get_cells().indexOf(t_cell);
-							IPython.notebook.to_code(t_index);
+							/*var t_cell = IPython.notebook.insert_cell_below();
+							t_cell.set_text(python_text);*/
+							define_insert_html_page_class = false;
 						});
+						var txt = '';
+						txt+= 'url = "' + conv_url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n';
+						txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
+						
+						var img_file = IPython.notebook.notebook_path;
+						img_file = img_file.replace(/.*\/(.*)/g, "$1")
+						img_file = img_file.replace(/(.*)\..*/g, "$1")
+						txt+= 'image_dir = "'+ img_file +'/"\n\n';
+						
+						txt+= 'insert_html_page(url, xpath, image_dir).start()';
+						
+						var t_cell = IPython.notebook.insert_cell_below();
+						t_cell.set_text(txt);
+						//var t_index = IPython.notebook.get_cells().indexOf(t_cell);
+						//IPython.notebook.to_code(t_index);
 					}
 				}
 			},
@@ -115,11 +116,6 @@ define([
 				label : 'Copy entire notebook',
 				icon : 'fa-copy',
 				callback : function(){
-					if(define_insert_html_page_class){
-						console.log(IPython.notebook.notebook_path);
-						define_insert_html_page_class = false;
-					}
-					
 					$("div.cell").addClass("jupyter-soft-selected");
 
 					var cells = IPython.notebook.get_selected_cells();
@@ -132,6 +128,56 @@ define([
 						/*for(var j in cells[i]){
 							console.log(cells[i][j]);
 						}*/
+					}
+					/*for(var i in IPython.notebook){
+						console.log(i);
+					}*/
+				}
+			},
+			{
+				id : 'add_base_64_image',
+				label : 'Add image in base64',
+				icon : 'fa-cog',
+				callback : function(){
+					var image_src = prompt("Path to image", "");
+					if (image_src != null){
+						var image_end = image_src.replace(/.*\.(.*)/g, "$1");
+						var data_type = "";
+						switch(image_end){
+							case "png":
+								data_type = "image/png";
+							break;
+							case "jpg":
+								data_type = "image/jpg";
+							break;
+							case "gif":
+								data_type = "image/gif";
+							break;
+							default:
+								console.log("Incompatible image type");
+								return;
+						}
+						
+						var img = new Image();
+						img.src = image_src;
+						
+						var canvas = document.createElement("canvas");
+						canvas.width = img.width;
+						canvas.height = img.height;
+
+						var ctx = canvas.getContext("2d");
+						ctx.drawImage(img, 0, 0);
+
+						var dataURL = canvas.toDataURL(data_type);
+
+						var t_cell = IPython.notebook.insert_cell_below();
+						t_cell.set_text('%%html\n<img src="'+dataURL+'"/>');
+						t_cell.execute();
+						t_cell._metadata["hide_input"] = true;
+						t_cell.element.find("div.input").toggle('slow');
+						for(i in t_cell){
+							console.log(i);
+						}
 					}
 				}
 			}

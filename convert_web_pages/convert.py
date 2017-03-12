@@ -10,15 +10,15 @@ class insert_html_page:
 	url = ""
 	xpath = ""
 	source_type = ""
-	image_file = ""
+	image_dir = ""
 	source = ""
 	listOrders=[]
 	table_head = False
 	
-	def __init__(self, url, xpath, image_file):
+	def __init__(self, url, xpath, image_dir):
 		self.url = url
 		self.xpath = xpath
-		self.image_file = image_file
+		self.image_dir = image_dir
 	
 	def relative_to_absolute_ref(self, href):
 		if self.source_type == "web":
@@ -43,10 +43,10 @@ class insert_html_page:
 				return re.sub("(.*\\"+os.sep+").*","\\1",self.url) + href
 
 	def download_image(self, src):
-		if not os.path.exists(self.image_file):
-			os.makedirs(self.image_file)
+		if not os.path.exists(self.image_dir):
+			os.makedirs(self.image_dir)
 		
-		img_name = self.image_file
+		img_name = self.image_dir
 		if img_name[-1] != "/":
 			img_name+= "/"
 		img_name+= re.sub(".*/(.*)", "\\1", src)
@@ -78,9 +78,9 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 			else:
 				display_javascript("""
 var t_cell = IPython.notebook.insert_cell_below();
-t_cell.set_text('%%code\\n"""+re.sub("[\r]?[\n]","\\\\n",source.replace("\\","\\\\").replace("'","\\'"))+"""');
+t_cell.set_text('"""+re.sub("[\r]?[\n]","\\\\n",source.replace("\\","\\\\").replace("'","\\'"))+"""');
 var t_index = IPython.notebook.get_cells().indexOf(t_cell);
-IPython.notebook.to_markdown(t_index);""", raw=True)
+IPython.notebook.select(t_index);""", raw=True)
 		self.source = ""
 
 	"""Iterative working of tags"""
@@ -266,13 +266,18 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 			try:
 				page_text = win32clipboard.GetClipboardData(win32clipboard.RegisterClipboardFormat("HTML Format"))
 				page_text = page_text.decode("utf-8")
+				print(page_text + "\n--------------------------------")
+				self.url = re.sub("(?s).*SourceURL:([^\r\n]*)(?s).*", "\\1", page_text)
+				if self.url == page_text:
+					self.url = ""
 				page_text = re.sub("(?s).*(<html>(?s).*</html>)(?s).*", "\\1", page_text)
 			except TypeError:
 				try:
 					page_text = win32clipboard.GetClipboardData()
 				except TypeError:
-					page_text = ''
+					page_text = ""
 			win32clipboard.CloseClipboard()
+			self.source_type = "web"
 		elif re.match("(http)|(https)://", self.url):
 			page_text = urllib.request.urlopen(self.url).read()
 			self.source_type = "web"
@@ -281,22 +286,10 @@ IPython.notebook.to_markdown(t_index);""", raw=True)
 			page_text = file.read()
 			self.source_type = "local"
 		html = lxml.html.fromstring(page_text)
+		print(self.url + "\n--------------------------------")
 
 		"""Looking thru the page"""
 		for tag in html.xpath(self.xpath):
 			"""1st call"""
 			self.work_tag(tag)
 			self.create_slide(self.source, "markdown")
-
-		display_javascript("""
-var ncells = IPython.notebook.ncells();
-var cells = IPython.notebook.get_cells();
-
-for (var i = 0; i < ncells; i++) {
-	var cell = cells[i];
-	if (cell.get_text().startsWith("%%code\\n")){
-		cell.set_text(cell.get_text().substring(7));
-		var t_index = IPython.notebook.get_cells().indexOf(cell);
-		IPython.notebook.to_code(t_index);
-	}
-}""", raw=True)

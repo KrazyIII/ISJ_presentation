@@ -16,7 +16,7 @@ IPython.notebook.metadata.livereveal["transition"] = "linear";
 //Values true, |false|
 IPython.notebook.metadata.livereveal["scroll"] = false;
 
-//Start slidechow at "selected" or "beginning"
+//Start slidechow at "selected" cell or "beginning" (first) cell
 //Values |"beginning"|, "selected"
 IPython.notebook.metadata.livereveal["start_slideshow_at"] = "beginning";
 
@@ -76,6 +76,7 @@ define([
 	config.loaded.then(function() {
 		
 		var rise_config = {};
+		var rise_config_desc = {};
 		
 		if(config.data.hasOwnProperty('default_config_for_rise')){
 			for(var i in config.data.default_config_for_rise){
@@ -103,9 +104,30 @@ define([
 			rise_config["progress"] = true;
 			rise_config["history"] = true;
 			rise_config["slideNumber"] = true;
-			rise_config["width"] = 1140
-			rise_config["height"] = 855
-			rise_config["minScale"] = 1.0
+			rise_config["width"] = 1140;
+			rise_config["height"] = 855;
+			rise_config["minScale"] = 1.0;
+		}
+		if(config.data.hasOwnProperty('default_config_for_rise_description')){
+			for(var i in config.data.default_config_for_rise_description){
+				var indx = config.data.default_config_for_rise_description[i].indexOf("=");
+				var param = config.data.default_config_for_rise_description[i].substr(0, indx).trim();
+				var value = config.data.default_config_for_rise_description[i].substr(indx + 1).trim();
+				rise_config_desc[param] = value;
+			}
+		}
+		else{
+			rise_config_desc["theme"] = 'Set theme.\nValues |"simple"|, "beige", "blood", "default", "moon", "night", "serif", "sky", "solarized"';
+			rise_config_desc["transition"] = 'Set global transition type.\nValues |"linear"|, "none", "fade", "slide"';
+			rise_config_desc["scroll"] = 'Scrolable slides.\nValues true, |false|';
+			rise_config_desc["start_slideshow_at"] = 'Start slidechow at "selected" cell or "beginning" (first) cell.\nValues |"beginning"|, "selected"';
+			rise_config_desc["controls"] = 'Show controls.\nValues |true| false';
+			rise_config_desc["progress"] = 'Show progress.\nValues |true|, false';
+			rise_config_desc["history"] = 'Show history.\nValues |true|, false';
+			rise_config_desc["slideNumber"] = 'Show number of slide.\nValues |true|, false';
+			rise_config_desc["width"] = 'Set slide width.\nDefault value = 1140';
+			rise_config_desc["height"] = 'Set slide height.\nDefault value = 855';
+			rise_config_desc["minScale"] = 'We need this for codemirror to work right.\nDefault value = 1.0';
 		}
 		
 		// Set global config when kernel is ready
@@ -178,12 +200,17 @@ define([
 						console.log(i+" = "+IPython.notebook.metadata.livereveal[i]);
 					}*/
 					
-					var txt = '%%javascript\n\n';
+					var txt = '%%javascript\n';
 					for(item in IPython.notebook.metadata.livereveal){
+						if(rise_config_desc.hasOwnProperty(item)){
+							txt+= "\n\n/*";
+							txt+= rise_config_desc[item].replace("\\n","\n").replace("\\t","\t");
+							txt+= "*/\n";
+						}else txt+= "\n\n";
 						if(typeof IPython.notebook.metadata.livereveal[item] === 'string'){
-							txt+= "IPython.notebook.metadata.livereveal[\""+item+"\"] = \""+IPython.notebook.metadata.livereveal[item]+"\";\n";
+							txt+= "IPython.notebook.metadata.livereveal[\""+item+"\"] = \""+IPython.notebook.metadata.livereveal[item]+"\";";
 						}else{
-							txt+= "IPython.notebook.metadata.livereveal[\""+item+"\"] = "+IPython.notebook.metadata.livereveal[item]+";\n";
+							txt+= "IPython.notebook.metadata.livereveal[\""+item+"\"] = "+IPython.notebook.metadata.livereveal[item]+";";
 						}
 					}
 					
