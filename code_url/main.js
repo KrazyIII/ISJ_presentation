@@ -58,28 +58,53 @@ define([
         google_fonts.href = require.toUrl("https://fonts.googleapis.com/css?family=Roboto+Mono");
         document.getElementsByTagName("head")[0].appendChild(google_fonts);
 		
-		// Mark cells as not yet renederd on start
-		var original_render = textcell.MarkdownCell.prototype.render;
-		textcell.MarkdownCell.prototype.render = function() {
-			this.rendered = false;
-			return original_render.apply(this);
-		};
-		
 		// Run my code when rendering markdown cell
         events.on("rendered.MarkdownCell", function (event, data) {
             render_cell(data.cell);
         });
 		
+		Jupyter.toolbar.add_buttons_group([
+			{
+				id : 'rerun_and_clean',
+				label : 'Render markdown and clean code',
+				icon : 'fa-refresh',
+				callback : function(){
+					var ncells = IPython.notebook.ncells();
+					var cells = IPython.notebook.get_cells();
+					for (var i = 0; i < ncells; i++) {
+						var cell = cells[i];
+						if (cell instanceof IPython.MarkdownCell){
+							cell.rendered = false;
+							cell.render();
+						}
+						if (cell instanceof IPython.CodeCell){
+							if(cell.get_text().startsWith("%%html"))
+								cell.execute();
+							else
+								cell.clear_output();
+						}
+					}
+					/*console.log(cells[1].rendered);
+					for(var i in cells[1]){
+						console.log(i);
+					}*/
+				}
+			}
+		]);
 		// Execute markdown cell when kernel is ready
         events.on("kernel_ready.Kernel", function () {
             var ncells = IPython.notebook.ncells();
             var cells = IPython.notebook.get_cells();
+			console.log("Kernel ready");
             for (var i = 0; i < ncells; i++) {
                 var cell = cells[i];
 				if (cell instanceof IPython.MarkdownCell){
-					cell.execute();
+					if(cell.rendered){
+						cell.rendered = false;
+						cell.execute();
+						//console.log("Kernel ready");
+					}
 				}
-                
             }
         });
 		

@@ -1,24 +1,22 @@
 a.code:link {
-	background-color: rgb(249,249,249) !important;
-	color: blue !important;
+	background-color: rgb(247,247,247) !important;
+	/*color: rgb(51,122,207) !important;*/
 	text-decoration: none;
 }
 
 a.code:hover {
-	background-color: rgb(249,249,249) !important;
-	color: blue !important;
-	text-decoration: underline;
+	background-color: rgb(247,247,247) !important;
+	border-bottom: 2px rgb(36,82,169) solid;
 }
 
 a.code:active {
-	background-color: rgb(249,249,249) !important;
-	color: blue !important;
-	text-decoration: underline;
+	background-color: rgb(247,247,247) !important;
+	border-bottom: 2px rgb(36,82,169) solid;
 }
 
 code {
 	color: inherit !important;
-	background-color: rgb(249,249,249) !important;
+	background-color: rgb(247,247,247) !important;
 	font-family: 'Roboto Mono', 'Inconsolata', monospace !important;
 }
 

@@ -1,6 +1,6 @@
 Type: IPython Notebook Extension
-Name: Compare code
-Description: Compare code cells
+Name: Add image
+Description: Adds image in base64
 Link: readme.md
 Main: main.js
 Compatibility: 4.x

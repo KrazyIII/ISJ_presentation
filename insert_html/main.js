@@ -133,53 +133,6 @@ define([
 						console.log(i);
 					}*/
 				}
-			},
-			{
-				id : 'add_base_64_image',
-				label : 'Add image in base64',
-				icon : 'fa-cog',
-				callback : function(){
-					var image_src = prompt("Path to image", "");
-					if (image_src != null){
-						var image_end = image_src.replace(/.*\.(.*)/g, "$1");
-						var data_type = "";
-						switch(image_end){
-							case "png":
-								data_type = "image/png";
-							break;
-							case "jpg":
-								data_type = "image/jpg";
-							break;
-							case "gif":
-								data_type = "image/gif";
-							break;
-							default:
-								console.log("Incompatible image type");
-								return;
-						}
-						
-						var img = new Image();
-						img.src = image_src;
-						
-						var canvas = document.createElement("canvas");
-						canvas.width = img.width;
-						canvas.height = img.height;
-
-						var ctx = canvas.getContext("2d");
-						ctx.drawImage(img, 0, 0);
-
-						var dataURL = canvas.toDataURL(data_type);
-
-						var t_cell = IPython.notebook.insert_cell_below();
-						t_cell.set_text('%%html\n<img src="'+dataURL+'"/>');
-						t_cell.execute();
-						t_cell._metadata["hide_input"] = true;
-						t_cell.element.find("div.input").toggle('slow');
-						for(i in t_cell){
-							console.log(i);
-						}
-					}
-				}
 			}
 		]);
     });
