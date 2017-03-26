@@ -6,12 +6,10 @@ a.code:link {
 
 a.code:hover {
 	background-color: rgb(247,247,247) !important;
-	border-bottom: 2px rgb(36,82,169) solid;
 }
 
 a.code:active {
 	background-color: rgb(247,247,247) !important;
-	border-bottom: 2px rgb(36,82,169) solid;
 }
 
 code {

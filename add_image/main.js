@@ -108,22 +108,33 @@ define([
 				label : 'Get image in base64',
 				icon : 'fa-book',
 				callback : function(){
-					var image_name = null;
 					var selection = {};
 					selection["buttons"] = {};
-					for(var i in IPython.notebook.metadata["image.base64"]){
-						selection["buttons"][i] = function(){image_name = i;}
-					}
-					selection["buttons"]["Cancel"] = function(){image_name = null;}
-					$('').dialog(selection);
 					
-					if (image_name != null){
-						var txt = 'Image not found "'+image_name+'"';
-						if(IPython.notebook.metadata["image.base64"].hasOwnProperty(image_name)){
-							txt = IPython.notebook.metadata["image.base64"][image_name];
+					for(var i in IPython.notebook.metadata["image.base64"]){
+						
+						function display(button){
+							var html_cell = "";
+							
+							var image_name = button["target"]["innerText"];
+							
+							var html_cell = '<p>Image: "'+image_name+'"</p>\n<hr>\n';
+							if(IPython.notebook.metadata["image.base64"].hasOwnProperty(image_name)){
+								html_cell+= '<p style="height: 10em; width=300px; word-break: break-all;">'+ IPython.notebook.metadata["image.base64"][image_name] +'</p>';
+							}
+							$('#get_base_64_image_dialog')[0].innerHTML = html_cell;
 						}
-						alert(txt);
+						
+						selection["buttons"][i] = display;
 					}
+					var div = document.createElement("div");
+					div.setAttribute("id", "get_base_64_image_dialog");
+					
+					selection["close"] = function( event, ui ) {
+						$("div[aria-describedby='get_base_64_image_dialog']").remove();
+					}
+					
+					$(div).dialog(selection);
 				}
 			},
 			{

@@ -95,6 +95,21 @@ define([
 		return (cell_val == undefined)? undefined: cell_val
 	},
 	"Slide transition speed");
+	var rise_hide_callback = IPython.CellToolbar.utils.select_ui_generator([
+		["-",undefined],
+		["Input","input"],
+		["Output","output"]
+	],
+	// setter
+	function(cell, value){
+		cell.metadata.hide_rise = value
+	},
+	//geter
+	function(cell){
+		var cell_val = cell.metadata.hide_rise;
+		return (cell_val == undefined)? undefined: cell_val
+	},
+	"Hide in rise");
 	
 	var base_url = utils.get_body_data("baseUrl");
     var config = new configmod.ConfigSection('notebook', {base_url: base_url});
@@ -176,9 +191,11 @@ define([
 		// Register a callback to create a UI element for a cell toolbar.
         IPython.CellToolbar.register_callback('Slide transition', slide_transition_callback);
 		IPython.CellToolbar.register_callback('Slide transition speed', slide_transition_speed_callback);
+		IPython.CellToolbar.register_callback('Hide in rise', rise_hide_callback);
         // Register a preset of UI elements forming a cell toolbar.
         IPython.CellToolbar.register_preset("Slide transition", ['Slide transition']);
 		IPython.CellToolbar.register_preset("Slide transition speed", ['Slide transition speed']);
+		IPython.CellToolbar.register_preset("Hide in rise", ['Hide in rise']);
 		
 		Jupyter.toolbar.add_buttons_group([
 			{
@@ -194,6 +211,10 @@ define([
 					else if(IPython.notebook.metadata.celltoolbar === "Slide transition"){
 						IPython.notebook.metadata.celltoolbar = "Slide transition speed";
 						IPython.CellToolbar.activate_preset("Slide transition speed", this.events);
+					}
+					else if(IPython.notebook.metadata.celltoolbar === "Slide transition speed"){
+						IPython.notebook.metadata.celltoolbar = "Hide in rise";
+						IPython.CellToolbar.activate_preset("Hide in rise", this.events);
 					}
 					else{
 						IPython.notebook.metadata.celltoolbar = 'Slideshow';
@@ -299,71 +320,109 @@ define([
 		
 		$('#maintoolbar').bind('addClassEvent', function(type, arguments){
 			if (arguments === 'reveal_tagging'){
-				//console.log('---------');
-				//console.log(arguments);
-				//console.log('---------');
-			
-				var slide_counter = -1, subslide_counter = -1;
-			
-				var ncells = IPython.notebook.ncells();
-				var cells = IPython.notebook.get_cells();
-				for (var i = 0; i < ncells; i++) {
-					var cell = cells[i];
-					slide_type = (cell.metadata.slideshow || {}).slide_type;
-					if (slide_type === 'slide') {
-						slide_counter++;
-						subslide_counter = 0;
-					} else if (slide_type === 'subslide') {
-						subslide_counter ++;
-					}
+				setTimeout(function(){
+					var slide_counter = -1, subslide_counter = -1, fragment_counter = -1;
 				
-					if ((cell.metadata || {}).slide_transition){
-						if(slide_counter == -1) slide_counter = 0;
-						if(subslide_counter == -1) subslide_counter = 0;
-						
-						if(cell.metadata.slide_transition != undefined){
-							console.log('#slide-'+slide_counter+'-'+subslide_counter+' '+cell.metadata.slide_transition);
-							$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition', cell.metadata.slide_transition)
+					var ncells = IPython.notebook.ncells();
+					var cells = IPython.notebook.get_cells();
+					for (var i = 0; i < ncells; i++) {
+						var cell = cells[i];
+						slide_type = (cell.metadata.slideshow || {}).slide_type;
+						if (slide_type === 'slide') {
+							slide_counter++;
+							subslide_counter = 0;
+							fragment_counter = -1;
+						} else if (slide_type === 'subslide') {
+							subslide_counter++;
+							fragment_counter = -1;
+						} else if (slide_type === 'fragment') {
+							fragment_counter++;
 						}
-					}
-					if ((cell.metadata || {}).slide_transition_speed){
-						if(slide_counter == -1) slide_counter = 0;
-						if(subslide_counter == -1) subslide_counter = 0;
-						
-						if(cell.metadata.slide_transition_speed != undefined){
-							console.log('#slide-'+slide_counter+'-'+subslide_counter+' '+cell.metadata.slide_transition_speed);
-							$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition-speed', cell.metadata.slide_transition_speed)
-						}
-					}
 					
-				}
+						if ((cell.metadata || {}).slide_transition){
+							if(slide_counter == -1) slide_counter = 0;
+							if(subslide_counter == -1) subslide_counter = 0;
+							
+							if(cell.metadata.slide_transition != undefined){
+								console.log('#slide-'+slide_counter+'-'+subslide_counter+' '+cell.metadata.slide_transition);
+								$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition', cell.metadata.slide_transition)
+							}
+						}
+						if ((cell.metadata || {}).slide_transition_speed){
+							if(slide_counter == -1) slide_counter = 0;
+							if(subslide_counter == -1) subslide_counter = 0;
+							
+							if(cell.metadata.slide_transition_speed != undefined){
+								console.log('#slide-'+slide_counter+'-'+subslide_counter+' '+cell.metadata.slide_transition_speed);
+								$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition-speed', cell.metadata.slide_transition_speed)
+							}
+						}
+						if ((cell.metadata || {}).hide_rise){
+							if(slide_counter == -1) slide_counter = 0;
+							if(subslide_counter == -1) subslide_counter = 0;
+							
+							if(cell.metadata.hide_rise != undefined){
+								if(slide_type === 'slide' || slide_type === 'subslide'){
+									console.log('#slide-'+slide_counter+'-'+subslide_counter+' div.cell div.'+cell.metadata.hide_rise);
+									$('#slide-'+slide_counter+'-'+subslide_counter+' div.cell div.'+cell.metadata.hide_rise)[0].style.display = "none";
+								}
+								else if(slide_type === 'fragment'){
+									console.log('#slide-'+slide_counter+'-'+subslide_counter+' div[data-fragment-index="'+fragment_counter+'"] div.cell div.'+cell.metadata.hide_rise);
+									$('#slide-'+slide_counter+'-'+subslide_counter+' div[data-fragment-index="'+fragment_counter+'"] div.cell div.'+cell.metadata.hide_rise)[0].style.display = "none";
+									//$('#slide-0-0 div[data-fragment-index="0"] div.cell div.input')[0].style.display = "none";
+								}
+								
+							}
+						}
+					}
+				}, 2000);
 			}
 		});
 		$('body').bind('removeClassEvent', function(type, arguments){
 			if (arguments === 'rise-enabled'){
-				var slide_count = 0;
-				var sub_slide_count = 0;
+				var selected_slide_count = 0;
+				var selected_sub_slide_count = 0;
 				$('.present').each(function(){
 					var id = $(this).attr('id');
 					if(id != undefined && id.startsWith("slide")){
-						slide_count = +id.replace(/^slide-([0-9]+)-([0-9]+)$/g,"$1");
-						sub_slide_count = +id.replace(/^slide-([0-9]+)-([0-9]+)$/g,"$2");
+						selected_slide_count = +id.replace(/^slide-([0-9]+)-([0-9]+)$/g,"$1");
+						selected_sub_slide_count = +id.replace(/^slide-([0-9]+)-([0-9]+)$/g,"$2");
 					}
 				})
-				console.log("slide:" + slide_count + "-" + sub_slide_count);
+				console.log("slide:" + selected_slide_count + "-" + selected_sub_slide_count);
 				setTimeout(function(){
+					var slide_counter = -1, subslide_counter = -1;
+					
+					var select_cell = null;
+					
 					var ncells = IPython.notebook.ncells();
 					var cells = IPython.notebook.get_cells();
 					for (var i = 0; i < ncells; i++){
 						var slide_type = (cells[i].metadata.slideshow || {}).slide_type;
-						if(slide_type == "slide"){slide_count--;}
-						if((slide_type == "subslide" || slide_type == "slide") && slide_count < 0){sub_slide_count--;}
-						
-						if(slide_count < 0 && sub_slide_count < 0){
-							cells[i].select();
-							cells[i].focus_cell();
-							break;
+						if (slide_type === 'slide') {
+							slide_counter++;
+							subslide_counter = 0;
+						} else if (slide_type === 'subslide') {
+							subslide_counter ++;
 						}
+						
+						if ((cells[i].metadata || {}).hide_rise){
+							//console.log(cells[i]);
+							cells[i].select();
+							//console.log($('div.selected div.'+cells[i].metadata.hide_rise)[0]);
+							$('div.selected div.'+cells[i].metadata.hide_rise)[0].style.display = null;
+							//console.log($('div.selected div.'+cells[i].metadata.hide_rise)[0]);
+							cells[i].unselect();
+						}
+						
+						if(selected_slide_count == slide_counter && selected_sub_slide_count == subslide_counter && select_cell == null){
+							select_cell = cells[i];
+						}
+					}
+					
+					if(select_cell){
+						select_cell.select();
+						select_cell.focus_cell();
 					}
 				}, 1000);
 			}
