@@ -261,12 +261,12 @@ IPython.notebook.select(t_index);""", raw=True)
 
 	def start(self):
 		"""Getting the dokument"""
-		if self.url == "":
+		if self.url == "" or self.url == "clipboard" or self.url == "Clipboard":
 			win32clipboard.OpenClipboard(0)
 			try:
 				page_text = win32clipboard.GetClipboardData(win32clipboard.RegisterClipboardFormat("HTML Format"))
 				page_text = page_text.decode("utf-8")
-				print(page_text + "\n--------------------------------")
+				#print(page_text + "\n--------------------------------")
 				self.url = re.sub("(?s).*SourceURL:([^\r\n]*)(?s).*", "\\1", page_text)
 				if self.url == page_text:
 					self.url = ""
@@ -286,7 +286,7 @@ IPython.notebook.select(t_index);""", raw=True)
 			page_text = file.read()
 			self.source_type = "local"
 		html = lxml.html.fromstring(page_text)
-		print(self.url + "\n--------------------------------")
+		#print(self.url + "\n--------------------------------")
 
 		"""Looking thru the page"""
 		for tag in html.xpath(self.xpath):

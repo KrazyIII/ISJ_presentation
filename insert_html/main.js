@@ -63,6 +63,12 @@ define([
 			domains["reveal.js"] = "//div[@class='slides']/section | //div[@class='slides']/section/section";
 		}
 		
+		var kernel = IPython.notebook.kernel;
+		function output_callback(out_type, out_data){
+			console.log(out_type);
+			console.log(out_data);
+		}
+		
 		Jupyter.toolbar.add_buttons_group([
 			{
 				id : 'convert_web_pages',
@@ -88,7 +94,7 @@ define([
 						}
 						
 						if(define_insert_html_page_class) $.get(require.toUrl("./convert.py"), function(python_text){
-							IPython.notebook.kernel.execute(python_text);
+							kernel.execute(python_text, {"output": output_callback});
 							/*var t_cell = IPython.notebook.insert_cell_below();
 							t_cell.set_text(python_text);*/
 							define_insert_html_page_class = false;
@@ -98,8 +104,8 @@ define([
 						txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
 						
 						var img_file = IPython.notebook.notebook_path;
-						img_file = img_file.replace(/.*\/(.*)/g, "$1")
-						img_file = img_file.replace(/(.*)\..*/g, "$1")
+						img_file = img_file.replace(/.*\/(.*)/g, "$1");
+						img_file = img_file.replace(/(.*)\..*/g, "$1");
 						txt+= 'image_dir = "'+ img_file +'/"\n\n';
 						
 						txt+= 'insert_html_page(url, xpath, image_dir).start()';
@@ -109,6 +115,38 @@ define([
 						//var t_index = IPython.notebook.get_cells().indexOf(t_cell);
 						//IPython.notebook.to_code(t_index);
 					}
+				}
+			},
+			{
+				id : 'speed_convert_web_pages',
+				label : 'Speed convert web pages to ipython',
+				icon : 'fa-file',
+				callback : function(){
+					var conv_domain = 'default';
+					
+					var dom_xpath = '/html/body';
+					if(domains.hasOwnProperty(conv_domain)){
+						dom_xpath = domains[conv_domain];
+					}
+					
+					if(define_insert_html_page_class) $.get(require.toUrl("./convert.py"), function(python_text){
+						kernel.execute(python_text, {"output": output_callback});
+						define_insert_html_page_class = false;
+					});
+					var txt = '';
+					txt+= 'url = ""\n';
+					txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
+					
+					var img_file = IPython.notebook.notebook_path;
+					img_file = img_file.replace(/.*\/(.*)/g, "$1");
+					img_file = img_file.replace(/(.*)\..*/g, "$1");
+					txt+= 'image_dir = "'+ img_file +'/"\n\n';
+					
+					txt+= 'insert_html_page(url, xpath, image_dir).start()';
+					
+					setTimeout(function(cell_text){
+						kernel.execute("print('Hello world')", {"output": output_callback}, {silent:false});
+					}, 1000, txt);
 				}
 			},
 			{
