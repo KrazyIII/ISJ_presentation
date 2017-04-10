@@ -89,6 +89,24 @@ define([
 						console.log(i);
 					}*/
 				}
+			},
+			{
+				id : 'clean_all',
+				label : 'Clean all cells',
+				icon : 'fa-refresh',
+				callback : function(){
+					var ncells = IPython.notebook.ncells();
+					var cells = IPython.notebook.get_cells();
+					for (var i = 0; i < ncells; i++) {
+						var cell = cells[i];
+						if (cell instanceof IPython.MarkdownCell){
+							cell.unrender();
+						}
+						if (cell instanceof IPython.CodeCell){
+							cell.clear_output();
+						}
+					}
+				}
 			}
 		]);
 		// Execute markdown cell when kernel is ready

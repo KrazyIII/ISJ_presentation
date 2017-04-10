@@ -74,16 +74,67 @@ define([
 			img.src = image_src;//Starts conversion
 		}
 	}
+	/*
+	 * Deletes image in base64 from notebook metadata
+	 *
+	 * @param image_name Name of the image
+	 */
+	function delete_image(image_name){
+		if (image_name != null){
+			if(IPython.notebook.metadata["image.base64"].hasOwnProperty(image_name)){
+				var base64 = IPython.notebook.metadata["image.base64"];
+				delete base64[image_name];
+				fill_image_table();
+			}
+			else{
+				var txt = 'Image not found "'+image_name+'"';
+				alert(txt);
+			}
+		}
+	}
 	/* Gets image source from input
 	 * &
 	 * call add_image
 	 */
 	function get_image_path(e){
+		//console.log($('#image_file_path_f'));
 		if(e instanceof KeyboardEvent){//If function is set up by <input>
 			if(e.key != "Enter")
 				return; //Only reacts on enter
 		}
 		add_image($('#image_file_path')[0].value);
+	}
+	/* Gets image name from button
+	 * &
+	 * call delete_image
+	 */
+	function get_image_name(button){
+		delete_image(button.target.id);
+	}
+	/* Adds html cell
+	 */
+	function add_image_cell(button){
+		var txt = "%%html\n";
+		txt+= '<img alt="'+button.target.id+'" src="'+IPython.notebook.metadata["image.base64"][button.target.id]+'"/>';
+		
+		var t_cell = IPython.notebook.insert_cell_below();
+		t_cell.set_text(txt);
+	}
+	/* Adds invisible html cell
+	 */
+	function add_image_cell_invisible(button){
+		var txt = "%%html ";
+		txt+= "<!-- Invisible -->\n";
+		txt+= '<img alt="'+button.target.id+'" src="'+IPython.notebook.metadata["image.base64"][button.target.id]+'"/>';
+		
+		var t_cell = IPython.notebook.insert_cell_below();
+		t_cell.set_text(txt);
+	}
+	/* Present image
+	 */
+	function present_image(button){
+		$('#show_image').attr("src" ,IPython.notebook.metadata["image.base64"][button.target.id]);
+		$('#image_base64_section').html(IPython.notebook.metadata["image.base64"][button.target.id]);
 	}
 	/* Updates image table
 	 * Table class rendered_html
@@ -92,27 +143,57 @@ define([
 	function fill_image_table(){
 		var image_table = document.createElement("table");
 		image_table.id = "image_table";
+		image_table.width = "630px";
 		image_table.classList.add("rendered_html");
 		
-		var html = "";
 		for(var i in IPython.notebook.metadata["image.base64"]){
+			console.log(i);
 			var tr = document.createElement("tr");
-			
-			var td_text = document.createElement("td");
+				var td_text = document.createElement("td");
+				td_text.appendChild(document.createTextNode(i));
+				
+				var td_delete = document.createElement("td");
+					var button_delete = document.createElement("button");
+					button_delete.id = i;
+					button_delete.onclick = get_image_name;
+						var icon_delete = document.createElement("i");
+						icon_delete.classList.add("fa");
+						icon_delete.classList.add("fa-trash");
+					button_delete.appendChild(icon_delete);
+					
+					var button_add_image = document.createElement("button");
+					button_add_image.id = i;
+					button_add_image.onclick = add_image_cell;
+						var icon_plus = document.createElement("i");
+						icon_plus.classList.add("fa");
+						icon_plus.classList.add("fa-plus");
+					button_add_image.appendChild(icon_plus);
+					
+					var button_add_image_invisible = document.createElement("button");
+					button_add_image_invisible.id = i;
+					button_add_image_invisible.onclick = add_image_cell_invisible;
+						var icon_plus_invisible = document.createElement("i");
+						icon_plus_invisible.classList.add("fa");
+						icon_plus_invisible.classList.add("fa-plus");
+						icon_plus_invisible.style.opacity = "0.5";
+					button_add_image_invisible.appendChild(icon_plus_invisible);
+					
+					var button_present_image = document.createElement("button");
+					button_present_image.id = i;
+					button_present_image.onclick = present_image;
+						var icon_show = document.createElement("i");
+						icon_show.classList.add("fa");
+						icon_show.classList.add("fa-arrow-right");
+					button_present_image.appendChild(icon_show);
+				td_delete.appendChild(button_delete);
+				td_delete.appendChild(button_add_image);
+				td_delete.appendChild(button_add_image_invisible);
+				td_delete.appendChild(button_present_image);
 			tr.appendChild(td_text);
-			td_text.appendChild(document.createTextNode(i));
-			
-			var td_delete = document.createElement("td");
 			tr.appendChild(td_delete);
-			var button_delete = document.createElement("button");
-			td.appendChild(button_delete);
-
-			var icon_delete = document.createElement("i");
-			button_delete.appendChild(icon_delete);
-			icon_delete.classList.add("fa");
-			icon_delete.classList.add("fa-trash");
+			
+			image_table.appendChild(tr);
 		}
-		image_table.innerHTML = html;
 		$('#image_table').replaceWith(image_table);
 	}
 	
@@ -129,119 +210,112 @@ define([
 				 */
 				id : 'base_64_image',
 				label : 'Images in base64',
-				icon : 'fa-info',
+				icon : 'fa-file-image-o',
 				callback : function(){
-					var image_table = document.createElement("table");
+					var image_table = document.createElement("table");//Table for images, empty prototype
 					image_table.id = "image_table";
+					image_table.width = "700px";
 					image_table.classList.add("rendered_html");
 					
-					var input_path = document.createElement("input");
+					var input_path = document.createElement("input");//Text input for adding images
 					input_path.type = "text"; input_path.id = "image_file_path";
 					input_path.onkeyup = get_image_path;
 					
-					var add_button = document.createElement("button");
+					var input_path_f = document.createElement("input");//File input for adding images
+					input_path_f.type = "file"; input_path_f.id = "image_file_path_f";
+					
+					var add_button = document.createElement("button");//Button for adding images
 					add_button.type = "button";
 					add_button.appendChild(document.createTextNode("Add"));
 					add_button.onclick = get_image_path;
 					
-					var p = document.createElement("p");
+					var p = document.createElement("p");//Paragrapf for add input and add button
 					p.appendChild(input_path);
+					//p.appendChild(input_path_f);
 					p.appendChild(add_button);
 					
-					var div = document.createElement("div");
+					var image_section = document.createElement("div");
+					image_section.style.float = "right";
+					image_section.style["width"] = "102px";
+					image_section.style["height"] = "204px";
+					image_section.style["border"] = "1px black solid";
+						var image_2D_section = document.createElement("div");
+						image_2D_section.style.height = "100px";
+						image_2D_section.style.width = "100px";
+							var show_image = document.createElement("img");
+							show_image.id = "show_image";
+							show_image.style["max-width"] = "100px";
+							show_image.style["max-height"] = "100px";
+							show_image.setAttribute("src" ,"");
+						image_2D_section.appendChild(show_image);
+						
+						var image_base64_section = document.createElement("div");
+						image_base64_section.id = "image_base64_section";
+						image_base64_section.style["width"] = "100px";
+						image_base64_section.style["word-break"] = "break-all";
+						image_base64_section.style["overflow"] = "auto";
+						image_base64_section.style["height"] = "100px";
+					image_section.appendChild(image_2D_section);
+					image_section.appendChild(image_base64_section);
+					
+					var div = document.createElement("div");//Main dialog section
 					div.setAttribute("id", "base_64_image_dialog");
+					div.appendChild(image_section);
 					div.appendChild(image_table);
-					div.appendChild(document.createElement("hr"));
+					div.appendChild(document.createElement("hr"));//Separator
 					div.appendChild(p);
-					IPython.keyboard_manager.register_events(div);
+					IPython.keyboard_manager.register_events(div);//Turns of jupyter keyboard shortcuts
 					
 					var selection = {};
+					selection.width = '800px';
+					selection.position = { my: "top", at: "bottom", of: $('#maintoolbar') };//Position under the toolbar
 					
+					/* Destroys zombie after close
+					 */
 					selection["close"] = function( event, ui ) {
 						$("div[aria-describedby='base_64_image_dialog']").remove();
 					}
 					
-					$(div).dialog(selection);
+					$(div).dialog(selection);//Starts dialog
 					
 					fill_image_table();
-				}
-			},
-			{
-				id : 'get_base_64_image',
-				label : 'Get image in base64',
-				icon : 'fa-book',
-				callback : function(){
-					var selection = {};
-					selection["buttons"] = {};
-					
-					for(var i in IPython.notebook.metadata["image.base64"]){
-						
-						function display(button){
-							var html_cell = "";
-							
-							var image_name = button["target"]["innerText"];
-							
-							var html_cell = '<p>Image: "'+image_name+'"</p>\n<hr>\n';
-							if(IPython.notebook.metadata["image.base64"].hasOwnProperty(image_name)){
-								html_cell+= '<p style="height: 10em; width=300px; word-break: break-all;">'+ IPython.notebook.metadata["image.base64"][image_name] +'</p>';
-							}
-							$('#get_base_64_image_dialog')[0].innerHTML = html_cell;
-						}
-						
-						selection["buttons"][i] = display;
-					}
-					var div = document.createElement("div");
-					div.setAttribute("id", "get_base_64_image_dialog");
-					
-					selection["close"] = function( event, ui ) {
-						$("div[aria-describedby='get_base_64_image_dialog']").remove();
-					}
-					
-					$(div).dialog(selection);
-				}
-			},
-			{
-				id : 'delete_base_64_image',
-				label : 'Delete image',
-				icon : 'fa-trash',
-				callback : function(){
-					var image_name = prompt("Image name", "");
-					if (image_name != null){
-						if(IPython.notebook.metadata["image.base64"].hasOwnProperty(image_name)){
-							var base64 = IPython.notebook.metadata["image.base64"];
-							delete base64[image_name];
-						}
-						else{
-							var txt = 'Image not found "'+image_name+'"';
-							alert(txt);
-						}
-					}
 				}
 			}
 		]);
     };
 	
+	/* Changes value of images with basa64 string in notebook metadata
+	 * 
+	 * @param cell cell that will be changed
+	 */
 	var render_cell = function(cell) {
-        var element = cell.element.find('div.text_cell_render');
+        var element = cell.element.find('div.text_cell_render');//Get rendered data
 		var txt = element[0].innerHTML;
 		
+		/* Callback for replace
+		 * if source starts with image.base64/
+		 * then replaces its source in output with base64 value from notebook metadata
+		 */
 		function image_adder(match, offset, string) {
 			if(offset.startsWith("image.base64/")){
 				if(IPython.notebook.metadata.hasOwnProperty("image.base64") && IPython.notebook.metadata["image.base64"].hasOwnProperty(offset)){
-					offset = IPython.notebook.metadata["image.base64"][offset];
-					match = match.replace(/src="(.*?)"/g, 'src="'+ offset +'"');
+					offset = IPython.notebook.metadata["image.base64"][offset];//Set offset
+					match = match.replace(/src="(.*?)"/g, 'src="'+ offset +'"');//Replaces source in match
 				}
-				else{
+				else{//If image is not in notebook metadata
 					console.log('Image "'+offset+'" could not be loaded.');
 				}
 			}
 			return match;
 		}
 		
-		txt = txt.replace(/<img .*?src="(.*?)".*?\/?>/g, image_adder);
+		txt = txt.replace(/<img .*?src="(.*?)".*?\/?>/g, image_adder);//Changes source of the images
 		element[0].innerHTML = txt;
 	}
 	
+	/* On rendering markdown cell
+	 * Changes dysplay
+	 */
 	events.on("rendered.MarkdownCell", function (event, data) {
 		render_cell(data.cell);
     });
