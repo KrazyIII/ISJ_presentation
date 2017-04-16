@@ -17,7 +17,7 @@ define([
 	 * @param image_src Path to the image
 	 */
 	function add_image(image_src){
-		if (image_src != null){
+		if (image_src){
 			var image_end = image_src.replace(/.*\.(.*)/g, "$1"); //File type
 			var data_type = "";
 			switch(image_end){//Set data type based on file type
@@ -59,19 +59,21 @@ define([
 				}
 				IPython.notebook.metadata["image.base64"]["image.base64/"+image_src] = dataURL;
 				
-				//var t_cell = IPython.notebook.insert_cell_below();
-				//t_cell.set_text('%%html\n<img src="'+dataURL+'"/>');
-				//t_cell.execute();
-				fill_image_table();
+				$("#base_64_image_dialog").trigger('status_change', "green");
+				$("#base_64_image_dialog").trigger('table_change', "add");//fill_image_table();
 			});
 			/* When image fails to load
 			 * Prints error msg.
 			 */
 			img.addEventListener('error', function() {
+				$("#base_64_image_dialog").trigger('status_change', "red");
 				console.log('Image "'+image_src+'" could not be loaded.');
 			});
 			
 			img.src = image_src;//Starts conversion
+		}
+		else{
+			$("#base_64_image_dialog").trigger('status_change', "red");
 		}
 	}
 	/*
@@ -84,7 +86,7 @@ define([
 			if(IPython.notebook.metadata["image.base64"].hasOwnProperty(image_name)){
 				var base64 = IPython.notebook.metadata["image.base64"];
 				delete base64[image_name];
-				fill_image_table();
+				$("#base_64_image_dialog").trigger('table_change', "Sub");
 			}
 			else{
 				var txt = 'Image not found "'+image_name+'"';
@@ -97,25 +99,61 @@ define([
 	 * call add_image
 	 */
 	function get_image_path(e){
-		//console.log($('#image_file_path_f'));
 		if(e instanceof KeyboardEvent){//If function is set up by <input>
 			if(e.key != "Enter")
 				return; //Only reacts on enter
 		}
+		$("#base_64_image_dialog").trigger('status_change', "orange");
 		add_image($('#image_file_path')[0].value);
+	}
+	/* Gets image file from input
+	 */
+	function get_image_file(){
+		$("#base_64_image_dialog").trigger('status_f_change', "orange");
+		
+		//console.log(this.previousSibling.files);
+		for(var i=0;i<this.previousSibling.files.length;i++){
+			var file = this.previousSibling.files[i];
+			//console.log(file);
+			
+			var reader = new FileReader();
+			reader.addEventListener("load", function (file, e){
+				if(this.result){
+					if(!IPython.notebook.metadata.hasOwnProperty("image.base64")){
+						IPython.notebook.metadata["image.base64"] = {};
+					}
+					IPython.notebook.metadata["image.base64"]["image.base64/"+file.name] = this.result;
+					
+					$("#base_64_image_dialog").trigger('table_change', "Add");
+				}
+				$("#base_64_image_dialog").trigger('status_f_change', "green");
+				//console.log(this);
+				//console.log(file);
+			}.bind(reader, file));
+			reader.addEventListener("error", function (){
+				$("#base_64_image_dialog").trigger('status_f_change', "red");
+			});
+			
+			if(file){
+				reader.readAsDataURL(file);
+			}else{
+				$("#base_64_image_dialog").trigger('status_f_change', "red");
+			}
+		}
+		console.log(this);
 	}
 	/* Gets image name from button
 	 * &
 	 * call delete_image
 	 */
 	function get_image_name(button){
-		delete_image(button.target.id);
+		delete_image(button.currentTarget.getAttribute("data-src"));
 	}
 	/* Adds html cell
 	 */
 	function add_image_cell(button){
 		var txt = "%%html\n";
-		txt+= '<img alt="'+button.target.id+'" src="'+IPython.notebook.metadata["image.base64"][button.target.id]+'"/>';
+		txt+= '<img alt="'+button.currentTarget.getAttribute("data-src")+'" src="'+IPython.notebook.metadata["image.base64"][button.currentTarget.getAttribute("data-src")]+'"/>';
 		
 		var t_cell = IPython.notebook.insert_cell_below();
 		t_cell.set_text(txt);
@@ -125,36 +163,57 @@ define([
 	function add_image_cell_invisible(button){
 		var txt = "%%html ";
 		txt+= "<!-- Invisible -->\n";
-		txt+= '<img alt="'+button.target.id+'" src="'+IPython.notebook.metadata["image.base64"][button.target.id]+'"/>';
+		txt+= '<img alt="'+button.currentTarget.getAttribute("data-src")+'" src="'+IPython.notebook.metadata["image.base64"][button.currentTarget.getAttribute("data-src")]+'"/>';
 		
 		var t_cell = IPython.notebook.insert_cell_below();
 		t_cell.set_text(txt);
-	}
-	/* Present image
-	 */
-	function present_image(button){
-		$('#show_image').attr("src" ,IPython.notebook.metadata["image.base64"][button.target.id]);
-		$('#image_base64_section').html(IPython.notebook.metadata["image.base64"][button.target.id]);
 	}
 	/* Updates image table
 	 * Table class rendered_html
 	 * | image name | delete button |
 	 */
-	function fill_image_table(){
+	function fill_image_table(type, action){
 		var image_table = document.createElement("table");
 		image_table.id = "image_table";
-		image_table.width = "630px";
+		image_table.width = "100%";
 		image_table.classList.add("rendered_html");
 		
+		var sortable = [];
 		for(var i in IPython.notebook.metadata["image.base64"]){
+			sortable.push(i);
+		}
+		sortable.sort(function (a, b){
+			return a.toLowerCase().localeCompare(b.toLowerCase());
+		});
+		for(var x in sortable){
+			var i = sortable[x];
 			console.log(i);
 			var tr = document.createElement("tr");
 				var td_text = document.createElement("td");
 				td_text.appendChild(document.createTextNode(i));
 				
+				var td_image = document.createElement("td");
+				td_image.style.width = "100px";
+				td_image.style.height = "70px";
+					var image = document.createElement("img");
+					image.setAttribute("alt", i);
+					image.setAttribute("src", IPython.notebook.metadata["image.base64"][i]);
+				td_image.appendChild(image);
+				
+				var td_base64_value = document.createElement("td");
+				td_base64_value.style.width = "100px";
+				td_base64_value.style.height = "70px";
+					var p_base64 = document.createElement("p");
+					p_base64.style.width = "100px";
+					p_base64.style.height = "70px";
+					p_base64.style["word-break"] = "break-all";
+					p_base64.style["overflow"] = "auto";
+					p_base64.innerHTML = IPython.notebook.metadata["image.base64"][i];
+				td_base64_value.appendChild(p_base64);
+				
 				var td_delete = document.createElement("td");
 					var button_delete = document.createElement("button");
-					button_delete.id = i;
+					button_delete.setAttribute("data-src", i);
 					button_delete.onclick = get_image_name;
 						var icon_delete = document.createElement("i");
 						icon_delete.classList.add("fa");
@@ -162,7 +221,7 @@ define([
 					button_delete.appendChild(icon_delete);
 					
 					var button_add_image = document.createElement("button");
-					button_add_image.id = i;
+					button_add_image.setAttribute("data-src", i);
 					button_add_image.onclick = add_image_cell;
 						var icon_plus = document.createElement("i");
 						icon_plus.classList.add("fa");
@@ -170,26 +229,19 @@ define([
 					button_add_image.appendChild(icon_plus);
 					
 					var button_add_image_invisible = document.createElement("button");
-					button_add_image_invisible.id = i;
+					button_add_image_invisible.setAttribute("data-src", i);
 					button_add_image_invisible.onclick = add_image_cell_invisible;
 						var icon_plus_invisible = document.createElement("i");
 						icon_plus_invisible.classList.add("fa");
 						icon_plus_invisible.classList.add("fa-plus");
 						icon_plus_invisible.style.opacity = "0.5";
 					button_add_image_invisible.appendChild(icon_plus_invisible);
-					
-					var button_present_image = document.createElement("button");
-					button_present_image.id = i;
-					button_present_image.onclick = present_image;
-						var icon_show = document.createElement("i");
-						icon_show.classList.add("fa");
-						icon_show.classList.add("fa-arrow-right");
-					button_present_image.appendChild(icon_show);
 				td_delete.appendChild(button_delete);
 				td_delete.appendChild(button_add_image);
 				td_delete.appendChild(button_add_image_invisible);
-				td_delete.appendChild(button_present_image);
 			tr.appendChild(td_text);
+			tr.appendChild(td_image);
+			tr.appendChild(td_base64_value);
 			tr.appendChild(td_delete);
 			
 			image_table.appendChild(tr);
@@ -214,56 +266,57 @@ define([
 				callback : function(){
 					var image_table = document.createElement("table");//Table for images, empty prototype
 					image_table.id = "image_table";
-					image_table.width = "700px";
 					image_table.classList.add("rendered_html");
 					
 					var input_path = document.createElement("input");//Text input for adding images
 					input_path.type = "text"; input_path.id = "image_file_path";
 					input_path.onkeyup = get_image_path;
 					
-					var input_path_f = document.createElement("input");//File input for adding images
-					input_path_f.type = "file"; input_path_f.id = "image_file_path_f";
-					
 					var add_button = document.createElement("button");//Button for adding images
 					add_button.type = "button";
+					add_button.classList.add("status");
 					add_button.appendChild(document.createTextNode("Add"));
 					add_button.onclick = get_image_path;
 					
-					var p = document.createElement("p");//Paragrapf for add input and add button
+					var p = document.createElement("p");//Table for add input, add button and add status
 					p.appendChild(input_path);
-					//p.appendChild(input_path_f);
 					p.appendChild(add_button);
 					
-					var image_section = document.createElement("div");
-					image_section.style.float = "right";
-					image_section.style["width"] = "102px";
-					image_section.style["height"] = "204px";
-					image_section.style["border"] = "1px black solid";
-						var image_2D_section = document.createElement("div");
-						image_2D_section.style.height = "100px";
-						image_2D_section.style.width = "100px";
-							var show_image = document.createElement("img");
-							show_image.id = "show_image";
-							show_image.style["max-width"] = "100px";
-							show_image.style["max-height"] = "100px";
-							show_image.setAttribute("src" ,"");
-						image_2D_section.appendChild(show_image);
-						
-						var image_base64_section = document.createElement("div");
-						image_base64_section.id = "image_base64_section";
-						image_base64_section.style["width"] = "100px";
-						image_base64_section.style["word-break"] = "break-all";
-						image_base64_section.style["overflow"] = "auto";
-						image_base64_section.style["height"] = "100px";
-					image_section.appendChild(image_2D_section);
-					image_section.appendChild(image_base64_section);
+					var input_path_f = document.createElement("input");//File input for adding images
+					input_path_f.type = "file"; input_path_f.id = "image_file_path_f"; input_path_f.accept="image/*";
+					input_path_f.multiple = "multiple";
+					//input_path_f.style["display"] = "inline-block";
+					
+					var add_button_f = document.createElement("button");//Button for adding images
+					add_button_f.type = "button";
+					add_button_f.classList.add("status_f");
+					add_button_f.appendChild(document.createTextNode("Add"));
+					add_button_f.onclick = get_image_file;
+					//add_button_f.style["display"] = "inline-block";
+					
+					/*var status_f = document.createElement("div");
+					status_f.id = "status_f";
+					status_f.classList.add("status_f");
+					status_f.style["border"] = "1px solid black";
+					status_f.style["border-radius"] = "7px";
+					status_f.style["width"] = "14px";
+					status_f.style["height"] = "14px";
+					status_f.style["background-color"] = "gray";
+					status_f.style["display"] = "inline-block";*/
+					
+					var p2 = document.createElement("p");
+					p2.appendChild(input_path_f);
+					p2.appendChild(add_button_f);
+					//p2.appendChild(status_f);
 					
 					var div = document.createElement("div");//Main dialog section
 					div.setAttribute("id", "base_64_image_dialog");
-					div.appendChild(image_section);
+					//div.appendChild(image_section);
 					div.appendChild(image_table);
 					div.appendChild(document.createElement("hr"));//Separator
 					div.appendChild(p);
+					div.appendChild(document.createElement("hr"));//Separator num2
+					div.appendChild(p2);
 					IPython.keyboard_manager.register_events(div);//Turns of jupyter keyboard shortcuts
 					
 					var selection = {};
@@ -275,10 +328,25 @@ define([
 					selection["close"] = function( event, ui ) {
 						$("div[aria-describedby='base_64_image_dialog']").remove();
 					}
+					selection["open"] = function( event, ui ) {
+						$("#base_64_image_dialog").bind('table_change', fill_image_table);
+						$("#base_64_image_dialog").trigger('table_change', "Start");
+						
+						$("#base_64_image_dialog").bind('status_f_change', function(type, arguments){
+							var status = this.getElementsByClassName("status_f");
+							for(var i=0;i<status.length;i++){
+								status[i].style["color"] = arguments;
+							}
+						});
+						$("#base_64_image_dialog").bind('status_change', function(type, arguments){
+							var status = this.getElementsByClassName("status");
+							for(var i=0;i<status.length;i++){
+								status[i].style["color"] = arguments;
+							}
+						});
+					}
 					
 					$(div).dialog(selection);//Starts dialog
-					
-					fill_image_table();
 				}
 			}
 		]);
