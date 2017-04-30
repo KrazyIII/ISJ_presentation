@@ -1,30 +1,7 @@
 //
 
-/*
-conda 32 bit
-obrázky v prezentácií
-nbpresent
-rozdelenie
-
-lxml
-pywin32
-
-https://ipython.org/ipython-doc/3/interactive/magics.html#cell-magics
-%%python
-    %%python script magic
-    Run cells with python in a subprocess.
-    This is a shortcut for %%script python
-
-%%python2
-    %%python2 script magic
-    Run cells with python2 in a subprocess.
-    This is a shortcut for %%script python2
-
-%%python3
-    %%python3 script magic
-    Run cells with python3 in a subprocess.
-    This is a shortcut for %%script python3
-*/
+//lxml
+//pywin32
 
 define([
     'base/js/namespace',
@@ -64,10 +41,10 @@ define([
 		}
 		
 		var kernel = IPython.notebook.kernel;
-		function output_callback(out_type, out_data){
+		/*function output_callback(out_type, out_data){
 			console.log(out_type);
 			console.log(out_data);
-		}
+		}*/
 		
 		Jupyter.toolbar.add_buttons_group([
 			{
@@ -94,7 +71,7 @@ define([
 						}
 						
 						if(define_insert_html_page_class) $.get(require.toUrl("./convert.py"), function(python_text){
-							kernel.execute(python_text, {"output": output_callback});
+							kernel.execute(python_text);
 							/*var t_cell = IPython.notebook.insert_cell_below();
 							t_cell.set_text(python_text);*/
 							define_insert_html_page_class = false;
@@ -118,40 +95,8 @@ define([
 				}
 			},
 			{
-				id : 'speed_convert_web_pages',
-				label : 'Speed convert web pages to ipython',
-				icon : 'fa-file',
-				callback : function(){
-					var conv_domain = 'default';
-					
-					var dom_xpath = '/html/body';
-					if(domains.hasOwnProperty(conv_domain)){
-						dom_xpath = domains[conv_domain];
-					}
-					
-					if(define_insert_html_page_class) $.get(require.toUrl("./convert.py"), function(python_text){
-						kernel.execute(python_text, {"output": output_callback});
-						define_insert_html_page_class = false;
-					});
-					var txt = '';
-					txt+= 'url = ""\n';
-					txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
-					
-					var img_file = IPython.notebook.notebook_path;
-					img_file = img_file.replace(/.*\/(.*)/g, "$1");
-					img_file = img_file.replace(/(.*)\..*/g, "$1");
-					txt+= 'image_dir = "'+ img_file +'/"\n\n';
-					
-					txt+= 'insert_html_page(url, xpath, image_dir).start()';
-					
-					setTimeout(function(cell_text){
-						kernel.execute("print('Hello world')", {"output": output_callback}, {silent:false});
-					}, 1000, txt);
-				}
-			},
-			{
 				id : 'copy_notebook',
-				label : 'Copy entire notebook',
+				label : 'Select entire notebook',
 				icon : 'fa-copy',
 				callback : function(){
 					$("div.cell").addClass("jupyter-soft-selected");

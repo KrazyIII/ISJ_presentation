@@ -121,53 +121,49 @@ define([
 		for(var i=0;i<files.length;i++){//For all files
 			var file = files[i];
 			//console.log(file);
-			
-			var reader = new FileReader();
-			/* When the image is loaded
-			 * add its base64 value to notebook metadata
-			 * &
-			 * Updates table with images
-			 */
-			reader.addEventListener("load", function (file, dialog_win, e){
-				if(this.result){
-					if(!IPython.notebook.metadata.hasOwnProperty("image.base64")){
-						IPython.notebook.metadata["image.base64"] = {};
+				
+			$(this).trigger('status_f_change', {color:"orange", image:file.name, action:"file_start"});
+			setTimeout(function(file){//Asynchornus load
+				var reader = new FileReader();
+				/* When the image is loaded
+				 * add its base64 value to notebook metadata
+				 * &
+				 * Updates table with images
+				 */
+				reader.addEventListener("load", function (file, dialog_win, e){
+					if(this.result){
+						if(!IPython.notebook.metadata.hasOwnProperty("image.base64")){
+							IPython.notebook.metadata["image.base64"] = {};
+						}
+						IPython.notebook.metadata["image.base64"]["image.base64/"+file.name] = this.result;
+						
+						$(dialog_win).trigger('table_change', "Add");
+						$(dialog_win).trigger('status_f_change', {color:"green", image:file.name, action:"add"});
+					}else{
+						$(dialog_win).trigger('status_f_change', {color:"red", image:file.name, action:"error"});
 					}
-					IPython.notebook.metadata["image.base64"]["image.base64/"+file.name] = this.result;
-					
-					$(dialog_win).trigger('table_change', "Add");
-					$(dialog_win).trigger('status_f_change', {color:"green", image:file.name, action:"add"});
-				}else{
+					//console.log(this);
+					//console.log(file);
+				}.bind(reader, file, this)); //Bind sends file to function
+				/* When image fails to load
+				 * Prints error msg and changes status
+				 */
+				reader.addEventListener("error", function (file, dialog_win, e){
+					console.log('Image "'+file.name+'" could not be loaded.');
 					$(dialog_win).trigger('status_f_change', {color:"red", image:file.name, action:"error"});
+				}.bind(reader, file, this));
+				
+				if(file){
+					reader.readAsDataURL(file);
+				}else{
+					$(this).trigger('status_f_change', {color:"red", image:file.name, action:"error"});
 				}
-				//console.log(this);
-				//console.log(file);
-			}.bind(reader, file, this)); //Bind sends file to function
-			/* When image fails to load
-			 * Prints error msg and changes status
-			 */
-			reader.addEventListener("error", function (file, dialog_win, e){
-				console.log('Image "'+file.name+'" could not be loaded.');
-				$(dialog_win).trigger('status_f_change', {color:"red", image:file.name, action:"error"});
-			}.bind(reader, file, this));
-			
-			if(file){
-				reader.readAsDataURL(file);
-			}else{
-				$(dialog_win).trigger('status_f_change', {color:"red", image:file.name, action:"error"});
-			}
+			}.bind(this, file), 2);
 		}
 		if(files.length==0){//If there are no files changes status
 			$(this).trigger('status_f_change', {color:"red", image:null, action:null});
 		}
 		//console.log(this);
-	}
-	/* Gets image name from button
-	 * &
-	 * call delete_image
-	 */
-	function get_image_name(image){
-		delete_image(image, this);
 	}
 	/* Adds html cell
 	 */
@@ -216,7 +212,7 @@ define([
 				td_image.style.height = "79px";
 				td_image.style.overflow = "auto";
 				td_image.setAttribute("data-src", i);
-				td_image.onclick = function(){
+				setTimeout(function(){
 					var image = document.createElement("img");
 					image.setAttribute("src", IPython.notebook.metadata["image.base64"][this.getAttribute("data-src")]);
 					image.setAttribute("alt", this.getAttribute("data-src"));
@@ -225,29 +221,31 @@ define([
 					this.innerHTML = "";
 					this.appendChild(image);
 					this.onclick = null;
-				}
-				td_image.innerHTML = "Click to show image";
+				}.bind(td_image), 2);
+				td_image.innerHTML = "Image";
 				
 				var td_base64_value = document.createElement("td");//Cell with base64 value
 				td_base64_value.style.width = "100px";
 				td_base64_value.style.height = "79px";
 				td_base64_value.setAttribute("data-src", i);
 				td_base64_value.onclick = function(){
-					var p_base64 = document.createElement("p");
-					p_base64.style.width = "90px";
-					p_base64.style.height = "70px";
-					p_base64.style["word-break"] = "break-all";
-					p_base64.style["overflow"] = "auto";
-					p_base64.innerHTML = IPython.notebook.metadata["image.base64"][this.getAttribute("data-src")];
-					this.innerHTML = "";
-					this.appendChild(p_base64);
-					this.onclick = null;
+					setTimeout(function(){
+						var p_base64 = document.createElement("p");
+						p_base64.style.width = "90px";
+						p_base64.style.height = "70px";
+						p_base64.style["word-break"] = "break-all";
+						p_base64.style["overflow"] = "auto";
+						p_base64.innerHTML = IPython.notebook.metadata["image.base64"][this.getAttribute("data-src")];
+						this.innerHTML = "";
+						this.appendChild(p_base64);
+						this.onclick = null;
+					}.bind(this), 2);
 				}
 				td_base64_value.innerHTML = "Click to show base64";
 				
 				var td_buttons = document.createElement("td");//Cell for buttons
 					var button_delete = document.createElement("button");//Button for delete
-					button_delete.onclick = get_image_name.bind(this, i);
+					button_delete.onclick = delete_image.bind(button_delete, i, this);
 						var icon_delete = document.createElement("i");
 						icon_delete.classList.add("fa");
 						icon_delete.classList.add("fa-trash");
@@ -269,7 +267,7 @@ define([
 					button_add_image_invisible.appendChild(icon_plus_invisible);
 				td_buttons.appendChild(button_delete);
 				td_buttons.appendChild(button_add_image);
-				td_buttons.appendChild(button_add_image_invisible);
+				//td_buttons.appendChild(button_add_image_invisible);
 			tr.appendChild(td_text);
 			tr.appendChild(td_image);
 			tr.appendChild(td_base64_value);
@@ -378,9 +376,29 @@ define([
 						 * Changes color of the adding button
 						 */
 						$(this).bind('status_f_change', function(type, arguments){
-							$(this).find("#status_f").css("color", arguments.color);
+							//$(this).find("#status_f").css("color", arguments.color);
 							if(arguments.action == "start"){
-								$(this).find("#status_text").html("Status:");
+								$(this).find("#status_text").html('Status:<ul id="status_list_field"></ul>');
+							}
+							if(arguments.action == "file_start"){
+								var item = document.createElement("li");
+								item.innerHTML = arguments.image;
+									var indikator = document.createElement("div");
+									indikator.id = arguments.image;
+									indikator.style.height = "1em";
+									indikator.style.width = "1em";
+									indikator.style.border = "1px black solid";
+									indikator.style["border-radius"] = "0.5em";
+									indikator.style.display = "inline-block";
+									indikator.style["margin-left"] = "0.5em";
+									//indikator.style["background-color"] = arguments.color;
+								item.appendChild(indikator);
+								
+								$(this).find("#status_list_field").append(item);
+							}
+							if(arguments.action != "start"){
+								//console.log($(this).find("#status_list_field li div[id='"+arguments.image+"']"));
+								$(this).find("div[id='"+arguments.image+"']").css("background-color", arguments.color);
 							}
 							console.log(arguments);
 						});
