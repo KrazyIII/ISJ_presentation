@@ -4,24 +4,24 @@
 Rozšírenie: jupyter_comon_utils (môže byť zmenené)
 * Grafická úprava kombinácie odkazu a kódu
 * Nastavenie fontu pre kód: Roboto Mono
-* <i class="fa-refresh fa"></i>
+* Ikona: [fa-refresh](http://fontawesome.io/icon/refresh/)
   * Spustí markdown bunky
   * Spustí %%html bunky
   * Spustí bunky, ktoré sa začínajú z "# Run"
   * Vyčistí výstupy ostatných kódových buniek
-* <i class="fa-eraser fa"></i>
+* Ikona: [fa-eraser](http://fontawesome.io/icon/eraser/)
   * Vyčistí všetky výstupy buniek
-* <i class="fa-share fa"></i>
+* Ikona: [fa-share](http://fontawesome.io/icon/share/)
   * Nastaví typ snímky na "sub-slide" pre bunky, ktoré ho nemajú nastavené
 
 ## Prezentácia dokumentu
 Rozšírenie: rise_config
-* <i class="fa-recycle fa"></i>
+* Ikona: [fa-recycle](http://fontawesome.io/icon/recycle/)
   * Prepína Cell Toolbar medzi: Slideshow -> Slide transition -> Slide transition speed -> Hide in rise -> Slideshow
-* <i class="fa-cog fa"></i>
+* Ikona: [fa-cog](http://fontawesome.io/icon/cog/)
   * Vloží bunku typu javascript "%%javascript" na nastavenie RISE
   * Údaje v bunke sú z nastavenia v dokumente
-* <i class="fa-cogs fa"></i>
+* Ikona: [fa-cogs](http://fontawesome.io/icon/cogs/)
   * Vloží bunku typu javascript "%%javascript" na nastavenie RISE
   * Údaje v bunke sú z nastavenia rozšírenia, ktoré sa dá zmeniť v Jupyter Nbextensions Configurator.
 * Po návrate z RISE prejde na vybranú bunku namiesto začiatku dokumentu
@@ -31,7 +31,7 @@ Rozšírenie: rise_config
 
 ## Vkladanie html do dokumentu
 Rozšírenie: insert_html
-* <i class="fa-file fa"></i>
+* Ikona: [fa-file](http://fontawesome.io/icon/file/)
   * Vstup:
     * url k stránke
 	* cesta k súboru
@@ -49,7 +49,7 @@ Rozšírenie: insert_html
 
 ## Obrázky v dokumente
 Rozšírenie: add_image
-* <i class="fa-file-image-o fa"></i>
+* Ikona: [fa-file-image-o](http://fontawesome.io/icon/file-image-o/)
   * Spustí dialógové okno na spravovanie obrázkov
   * Obrázky uložené v meta-dátach dokumentu v base64
 
