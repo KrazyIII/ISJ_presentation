@@ -1,6 +1,7 @@
 # Rozšírenie možností prezentácií v prostredí Jupyter Notebook
 
-## Príprava dokumentou
+## Príprava dokumentov
+Rozšírenie: jupyter_comon_utils (môže byť zmenené)
 * Grafická úprava kombinácie odkazu a kódu
 * Nastavenie fontu pre kód: Roboto Mono
 * <i class="fa-refresh fa"></i>
@@ -11,9 +12,10 @@
 * <i class="fa-eraser fa"></i>
   * Vyčistí všetky výstupy buniek
 * <i class="fa-share fa"></i>
-  * Nastavý typ snímky na "sub-slide" pre bunky, ktoré ho nemajú nastavené
+  * Nastaví typ snímky na "sub-slide" pre bunky, ktoré ho nemajú nastavené
 
 ## Prezentácia dokumentu
+Rozšírenie: rise_config
 * <i class="fa-recycle fa"></i>
   * Prepína Cell Toolbar medzi: Slideshow -> Slide transition -> Slide transition speed -> Hide in rise -> Slideshow
 * <i class="fa-cog fa"></i>
@@ -28,6 +30,7 @@
 * Cell Toolbar -> Hide in rise: schová určitú časť pri prezentácií
 
 ## Vkladanie html do dokumentu
+Rozšírenie: insert_html
 * <i class="fa-file fa"></i>
   * Vstup:
     * url k stránke
@@ -45,6 +48,7 @@
   * python ipynb_to_latex.py file.ipynb
 
 ## Obrázky v dokumente
+Rozšírenie: add_image
 * <i class="fa-file-image-o fa"></i>
   * Spustí dialógové okno na spravovanie obrázkov
   * Obrázky uložené v meta-dátach dokumentu v base64

@@ -80,6 +80,8 @@ define([
 						if (cell instanceof IPython.CodeCell){
 							if(cell.get_text().startsWith("%%html"))
 								cell.execute();
+							if(cell.get_text().startsWith("# Run"))
+								cell.execute();
 							else
 								cell.clear_output();
 						}
@@ -89,11 +91,13 @@ define([
 						console.log(i);
 					}*/
 				}
-			},
+			}
+		]);
+		Jupyter.toolbar.add_buttons_group([
 			{
 				id : 'clean_all',
 				label : 'Clean all cells',
-				icon : 'fa-refresh',
+				icon : 'fa-eraser',
 				callback : function(){
 					var ncells = IPython.notebook.ncells();
 					var cells = IPython.notebook.get_cells();
