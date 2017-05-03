@@ -113,6 +113,54 @@ define([
 				}
 			}
 		]);
+		Jupyter.toolbar.add_buttons_group([
+			{
+				id : 'set_slide_type',
+				label : 'Set unassigned slide type',
+				icon : 'fa-share',
+				callback : function(){
+					var ncells = IPython.notebook.ncells();
+					var cells = IPython.notebook.get_cells();
+					
+					for (var i = 0; i < ncells; i++) {
+						var cell = cells[i];
+						slide_type = (cell.metadata.slideshow || {}).slide_type;
+						//console.log(slide_type);
+						if (slide_type == undefined || slide_type === "-"){
+							cell.metadata.slideshow = {};
+							cell.metadata.slideshow.slide_type = "subslide";
+						}
+					}
+					IPython.notebook.metadata.celltoolbar = 'Slideshow';
+					IPython.CellToolbar.activate_preset('Slideshow', this.events);
+				}
+			}
+		]);
+		Jupyter.toolbar.add_buttons_group([
+			{
+				id : 'copy_notebook',
+				label : 'Select entire notebook',
+				icon : 'fa-copy',
+				callback : function(){
+					$("div.cell").addClass("jupyter-soft-selected");
+
+					var cells = IPython.notebook.get_selected_cells();
+					if (cells.length === 0) {
+						cells = [IPython.notebook.get_selected_cell()];
+					}
+					
+					for (var i=0; i < cells.length; i++) {
+						console.log(cells[i].get_text());
+						/*for(var j in cells[i]){
+							console.log(cells[i][j]);
+						}*/
+					}
+					/*for(var i in IPython.notebook){
+						console.log(i);
+					}*/
+				}
+			}
+		]);
 		// Execute markdown cell when kernel is ready
         events.on("kernel_ready.Kernel", function () {
             var ncells = IPython.notebook.ncells();

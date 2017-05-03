@@ -1,6 +1,0 @@
-Type: IPython Notebook Extension
-Name: Add image
-Description: Adds image in base64
-Link: readme.md
-Main: main.js
-Compatibility: 4.x

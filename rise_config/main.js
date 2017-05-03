@@ -1,8 +1,4 @@
-//úpravy
-//Cyklovanie
-//štýly pre jednotlivé slajdy
-//insert config
-//insert default config
+//
 
 /*
 %%javascript
@@ -224,27 +220,6 @@ define([
 				}
 			},
 			{
-				id : 'set_slide_type',
-				label : 'Set unassigned slide type',
-				icon : 'fa-cogs',
-				callback : function(){
-					var ncells = IPython.notebook.ncells();
-					var cells = IPython.notebook.get_cells();
-					
-					for (var i = 0; i < ncells; i++) {
-						var cell = cells[i];
-						slide_type = (cell.metadata.slideshow || {}).slide_type;
-						//console.log(slide_type);
-						if (slide_type == undefined || slide_type === "-"){
-							cell.metadata.slideshow = {};
-							cell.metadata.slideshow.slide_type = "subslide";
-						}
-					}
-					IPython.notebook.metadata.celltoolbar = 'Slideshow';
-					IPython.CellToolbar.activate_preset('Slideshow', this.events);
-				}
-			},
-			{
 				id : 'rise_global_settings',
 				label : 'Set RISE settings for this notebook',
 				icon : 'fa-cog',
@@ -276,7 +251,7 @@ define([
 			{
 				id : 'rise_global_default_settings',
 				label : 'Set default RISE settings for this notebook',
-				icon : 'fa-cog',
+				icon : 'fa-cogs',
 				callback : function(){
 					/*for(var i in IPython.notebook.metadata.livereveal){
 						console.log(i+" = "+IPython.notebook.metadata.livereveal[i]);
@@ -338,7 +313,7 @@ define([
 						fragment_counter++;
 					}
 				
-					if ((cell.metadata || {}).slide_transition){
+					if((cell.metadata || {}).slide_transition){
 						if(slide_counter == -1) slide_counter = 0;
 						if(subslide_counter == -1) subslide_counter = 0;
 						
@@ -347,7 +322,7 @@ define([
 							$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition', cell.metadata.slide_transition)
 						}
 					}
-					if ((cell.metadata || {}).slide_transition_speed){
+					if((cell.metadata || {}).slide_transition_speed){
 						if(slide_counter == -1) slide_counter = 0;
 						if(subslide_counter == -1) subslide_counter = 0;
 						
@@ -356,7 +331,7 @@ define([
 							$('#slide-'+slide_counter+'-'+subslide_counter).attr('data-transition-speed', cell.metadata.slide_transition_speed)
 						}
 					}
-					if ((cell.metadata || {}).hide_rise){
+					if((cell.metadata || {}).hide_rise){
 						if(slide_counter == -1) slide_counter = 0;
 						if(subslide_counter == -1) subslide_counter = 0;
 						

@@ -1,7 +1,7 @@
 # Rozšírenie možností prezentácií v prostredí Jupyter Notebook
 
 ## Príprava dokumentov
-Rozšírenie: jupyter_comon_utils (môže byť zmenené)
+Rozšírenie: jupyter_common_utils
 * Grafická úprava kombinácie odkazu a kódu
 * Nastavenie fontu pre kód: Roboto Mono
 * Ikona: [fa-refresh](http://fontawesome.io/icon/refresh/)
@@ -13,6 +13,8 @@ Rozšírenie: jupyter_comon_utils (môže byť zmenené)
   * Vyčistí všetky výstupy buniek
 * Ikona: [fa-share](http://fontawesome.io/icon/share/)
   * Nastaví typ snímky na "sub-slide" pre bunky, ktoré ho nemajú nastavené
+* Ikona: [fa-copy](http://fontawesome.io/icon/copy/)
+  * Označí všetky bunky
 
 ## Prezentácia dokumentu
 Rozšírenie: rise_config
@@ -29,16 +31,19 @@ Rozšírenie: rise_config
 * Cell Toolbar -> Slide transition speed: zmení rýchlosť prechodu pre konkrétnu bunku
 * Cell Toolbar -> Hide in rise: schová určitú časť pri prezentácií
 
-## Vkladanie html do dokumentu
-Rozšírenie: insert_html
+## Vkladanie html a obrázkov do dokumentu
+Rozšírenie: insert_html_img
 * Ikona: [fa-file](http://fontawesome.io/icon/file/)
   * Vstup:
     * url k stránke
 	* cesta k súboru
 	* prázdny alebo "clipboard" pre vstup zo schránky clipboard
-  * Definuje konvertor insert_html/convert.py
+  * Definuje konvertor insert_html_img/convert.py
   * Získa izolačný reťazec xpath pre známe stránky z konfigurácie rozšírenia
   * Vytvorí bunku na spustenie konvertora
+* Ikona: [fa-file-image-o](http://fontawesome.io/icon/file-image-o/)
+  * Spustí dialógové okno na spravovanie obrázkov
+  * Obrázky uložené v meta-dátach dokumentu v base64
 
 ## Konvertovanie dokumentu na LaTeX
 * Nastavenia v dokumente (Rozšírenie: compare_code)
@@ -46,12 +51,6 @@ Rozšírenie: insert_html
 * Skript na konvertovanie (Skript: ipynb_to_latex.py)
   * Python3
   * python ipynb_to_latex.py file.ipynb
-
-## Obrázky v dokumente
-Rozšírenie: add_image
-* Ikona: [fa-file-image-o](http://fontawesome.io/icon/file-image-o/)
-  * Spustí dialógové okno na spravovanie obrázkov
-  * Obrázky uložené v meta-dátach dokumentu v base64
 
 ## Inštalácia
 Kopírovanie rozšírení do: "Anaconda3\share\jupyter\nbextensions\" alebo "Anaconda3\envs\%enviroment%\share\jupyter\nbextensions\"

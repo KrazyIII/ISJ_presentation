@@ -1,6 +1,6 @@
 Type: IPython Notebook Extension
-Name: reveal.js configuration
-Description: Configures reveal.js
+Name: RISE configuration
+Description: Configures RISE
 Link: readme.md
 Main: main.js
 Compatibility: 4.x

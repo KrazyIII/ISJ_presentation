@@ -28,26 +28,6 @@ define([
         IPython.CellToolbar.register_callback('Compare code', compare_code_callback);
         // Register a preset of UI elements forming a cell toolbar.
         IPython.CellToolbar.register_preset("Compare code", ['Compare code']);
-		
-		Jupyter.toolbar.add_buttons_group([
-			{
-				id : 'compare_code',
-				label : 'Compare cells',
-				icon : 'fa-recycle',
-				callback : function(){
-					//console.log(IPython.notebook.metadata);
-					if(IPython.notebook.metadata.celltoolbar === "Slideshow"){
-						IPython.notebook.metadata.celltoolbar = "Compare code";
-						IPython.CellToolbar.activate_preset("Compare code", this.events);
-					}
-					else{
-						IPython.notebook.metadata.celltoolbar = 'Slideshow';
-						IPython.CellToolbar.activate_preset('Slideshow', this.events);
-					}
-					//console.log(IPython.notebook.metadata);
-				}
-			}
-		]);
 	};
 	
 	return {

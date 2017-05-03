@@ -1,6 +1,6 @@
 Type: IPython Notebook Extension
-Name: Insert html
-Description: Converts and inserts html into document
+Name: Insert html and images
+Description: Converts and inserts html and images into document
 Link: readme.md
 Main: main.js
 Compatibility: 4.x
