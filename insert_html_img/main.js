@@ -200,7 +200,7 @@ define([
 		var image_table = document.createElement("table");//Table
 		image_table.id = "image_table";
 		image_table.width = "100%";
-		image_table.classList.add("rendered_html");
+		image_table.classList.add("image_table");
 		
 		var sortable = [];//Sort data
 		for(var i in IPython.notebook.metadata["image.base64"]){
@@ -288,6 +288,12 @@ define([
 	}
 	
 	config.loaded.then(function() {
+		// Load CSS
+		var link = document.createElement("link");
+        link.type = "text/css";
+        link.rel = "stylesheet";
+        link.href = require.toUrl("./custom.css");
+        document.getElementsByTagName("head")[0].appendChild(link);
 		
 		domains = {};
 		
@@ -309,7 +315,7 @@ define([
 			domains["reveal.js"] = "//div[@class='slides']/section | //div[@class='slides']/section/section";
 		}
 		
-		var kernel = IPython.notebook.kernel;
+		//var kernel = IPython.notebook.kernel;
 		/*function output_callback(out_type, out_data){
 			console.log(out_type);
 			console.log(out_data);
@@ -340,26 +346,29 @@ define([
 						}
 						
 						if(define_insert_html_page_class) $.get(require.toUrl("./convert.py"), function(python_text){
-							kernel.execute(python_text);
+							IPython.notebook.kernel.execute(python_text);
 							/*var t_cell = IPython.notebook.insert_cell_below();
 							t_cell.set_text(python_text);*/
 							define_insert_html_page_class = false;
 						});
-						var txt = '';
-						txt+= 'url = "' + conv_url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n';
-						txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
-						
-						var img_file = IPython.notebook.notebook_path;
-						img_file = img_file.replace(/.*\/(.*)/g, "$1");
-						img_file = img_file.replace(/(.*)\..*/g, "$1");
-						txt+= 'image_dir = "'+ img_file +'/"\n\n';
-						
-						txt+= 'insert_html_page(url, xpath, image_dir).start()';
-						
-						var t_cell = IPython.notebook.insert_cell_below();
-						t_cell.set_text(txt);
-						t_cell.select();
-						t_cell.focus_cell();
+						setTimeout(function(conv_url, dom_xpath){
+							var txt = '';
+							txt+= 'url = "' + conv_url.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"\n';
+							txt+= 'xpath = "'+ dom_xpath.replace(/"/g, '\\"') +'"\n';
+							
+							var img_file = IPython.notebook.notebook_path;
+							img_file = img_file.replace(/.*\/(.*)/g, "$1");
+							img_file = img_file.replace(/(.*)\..*/g, "$1");
+							txt+= 'image_dir = "'+ img_file +'/"\n\n';
+							
+							txt+= 'insert_html_page(url, xpath, image_dir).start()';
+							
+							var t_cell = IPython.notebook.insert_cell_below();
+							t_cell.set_text(txt);
+							IPython.notebook.get_selected_cell().unselect();
+							t_cell.select();
+							t_cell.focus_cell();
+						}, 100, conv_url, dom_xpath);
 					}
 				}
 			}

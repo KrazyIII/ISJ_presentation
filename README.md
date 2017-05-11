@@ -12,7 +12,8 @@ Rozšírenie: jupyter_common_utils
 * Ikona: [fa-eraser](http://fontawesome.io/icon/eraser/)
   * Vyčistí všetky výstupy buniek
 * Ikona: [fa-share](http://fontawesome.io/icon/share/)
-  * Nastaví typ snímky na "sub-slide" pre bunky, ktoré ho nemajú nastavené
+  * Dialógové okno s výberom typu snímky.
+  * Typ snímky sa nastaví pre bunky, ktoré ho nemajú nastavené
 * Ikona: [fa-copy](http://fontawesome.io/icon/copy/)
   * Označí všetky bunky
 

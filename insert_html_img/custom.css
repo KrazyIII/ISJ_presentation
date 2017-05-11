@@ -1,0 +1,9 @@
+table.image_table{
+    border-collapse: collapse;
+	border: 1px solid black;
+}
+
+table.image_table td {
+    border: 1px solid black;
+	padding: 5px;
+}

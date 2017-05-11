@@ -64,7 +64,7 @@ define([
 		["Slide","slide"],
 		["Zoom","zoom"]
 	],
-	// setter
+	//setter
 	function(cell, value){
 		cell.metadata.slide_transition = value
 	},
@@ -373,7 +373,7 @@ define([
 					var cells = IPython.notebook.get_cells();
 					for (var i = 0; i < ncells; i++){
 						var slide_type = (cells[i].metadata.slideshow || {}).slide_type;
-						if (slide_type === 'slide') {
+						if (slide_type === 'slide'){
 							slide_counter++;
 							subslide_counter = 0;
 						} else if (slide_type === 'subslide') {
